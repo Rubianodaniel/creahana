@@ -7,13 +7,13 @@ from src.application.use_cases.task_list.task_list_service import TaskListServic
 from src.application.use_cases.task.task_service import TaskService
 from src.infrastructure.database.connection import get_db_session
 from src.presentation.shared.dependencies.service_factory import ServiceFactory
-from src.presentation.rest.schemas.task_list_schemas import (
+from src.presentation.rest.dtos.task_list_schemas import (
     TaskListCreateSchema,
     TaskListUpdateSchema,
     TaskListResponseSchema,
     TaskListWithTasksResponseSchema,
 )
-from src.presentation.rest.schemas.task_schemas import TaskResponseSchema
+from src.presentation.rest.dtos.task_schemas import TaskResponseSchema
 
 router = APIRouter(prefix="/task-lists", tags=["task-lists"])
 

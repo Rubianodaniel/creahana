@@ -4,11 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.application.use_cases.task.task_service import TaskService
 from src.domain.entities.task import Task
 from src.infrastructure.database.connection import get_db_session
-from src.presentation.rest.schemas.task_schemas import (
+from src.presentation.rest.dtos.task_schemas import (
     TaskCreateSchema,
     TaskUpdateSchema, 
     TaskResponseSchema
 )
+from src.presentation.rest.dtos.task_status_schemas import TaskStatusUpdateSchema
 from src.presentation.shared.dependencies.service_factory import ServiceFactory
 
 
@@ -96,4 +97,20 @@ async def delete_task(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Task not found"
+        )
+
+
+@router.patch("/{task_id}/status", response_model=TaskResponseSchema)
+async def change_task_status(
+    task_id: int,
+    status_data: TaskStatusUpdateSchema,
+    service: TaskService = Depends(get_task_service),
+):
+    try:
+        result = await service.change_status(task_id, status_data.status)
+        return TaskResponseSchema.model_validate(result)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
         )

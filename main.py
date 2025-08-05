@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from strawberry.fastapi import GraphQLRouter
 
 from src.presentation.rest.controllers.task_list_controller import router as task_list_router
 from src.presentation.rest.controllers.task_controller import router as task_router
+from src.presentation.graphql.schema import schema
 
 app = FastAPI(
     title="Task Management API",
@@ -19,9 +21,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
+# Include REST routers
 app.include_router(task_list_router, prefix="/api")
 app.include_router(task_router, prefix="/api")
+
+# Include GraphQL router
+graphql_app = GraphQLRouter(schema)
+app.include_router(graphql_app, prefix="/graphql")
 
 
 @app.get("/")

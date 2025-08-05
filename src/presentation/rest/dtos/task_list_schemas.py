@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict, Field
-from src.presentation.rest.schemas.task_schemas import TaskResponseSchema
+from src.presentation.rest.dtos.task_schemas import TaskResponseSchema
 
 
 class TaskListCreateSchema(BaseModel):
