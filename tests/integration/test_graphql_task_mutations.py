@@ -460,3 +460,167 @@ async def test_graphql_change_task_status_nonexistent(test_client):
     
     assert "errors" not in data
     assert data["data"]["changeTaskStatus"] is None
+
+
+@pytest.mark.asyncio
+async def test_graphql_update_task_success(test_client):
+    """Test successful task update with all fields"""
+    
+    # Create task list and task
+    create_task_list_query = """
+    mutation {
+        createTaskList(input: {
+            title: "Update Task Test List"
+        }) {
+            id
+        }
+    }
+    """
+    
+    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
+    task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
+    
+    create_task_query = f"""
+    mutation {{
+        createTask(input: {{
+            title: "Original Task"
+            description: "Original description"
+            taskListId: {task_list_id}
+            status: PENDING
+            priority: LOW
+            assignedUserId: 100
+        }}) {{
+            id
+        }}
+    }}
+    """
+    
+    create_response = await test_client.post("/graphql", json={"query": create_task_query})
+    task_id = create_response.json()["data"]["createTask"]["id"]
+    
+    # Update the task
+    update_query = f"""
+    mutation {{
+        updateTask(id: {task_id}, input: {{
+            title: "Updated Task"
+            description: "Updated description"
+            status: IN_PROGRESS
+            priority: HIGH
+            assignedUserId: 200
+        }}) {{
+            id
+            title
+            description
+            status
+            priority
+            assignedUserId
+            updatedAt
+        }}
+    }}
+    """
+    
+    response = await test_client.post("/graphql", json={"query": update_query})
+    
+    assert response.status_code == 200
+    data = response.json()
+    
+    assert "errors" not in data
+    assert "data" in data
+    assert data["data"]["updateTask"] is not None
+    
+    task = data["data"]["updateTask"]
+    assert task["id"] == task_id
+    assert task["title"] == "Updated Task"
+    assert task["description"] == "Updated description"
+    assert task["status"] == "IN_PROGRESS"
+    assert task["priority"] == "HIGH"
+    assert task["assignedUserId"] == 200
+    assert task["updatedAt"] is not None
+
+
+@pytest.mark.asyncio
+async def test_graphql_update_task_partial_update(test_client):
+    """Test updating only some fields of a task"""
+    
+    # Create task list and task
+    create_task_list_query = """
+    mutation {
+        createTaskList(input: {
+            title: "Partial Update List"
+        }) {
+            id
+        }
+    }
+    """
+    
+    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
+    task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
+    
+    create_task_query = f"""
+    mutation {{
+        createTask(input: {{
+            title: "Original Task"
+            description: "Original description"
+            taskListId: {task_list_id}
+            priority: MEDIUM
+            assignedUserId: 150
+        }}) {{
+            id
+        }}
+    }}
+    """
+    
+    create_response = await test_client.post("/graphql", json={"query": create_task_query})
+    task_id = create_response.json()["data"]["createTask"]["id"]
+    
+    # Update only the title and priority
+    update_query = f"""
+    mutation {{
+        updateTask(id: {task_id}, input: {{
+            title: "Only Title Updated"
+            priority: HIGH
+        }}) {{
+            id
+            title
+            description
+            priority
+            status
+            assignedUserId
+        }}
+    }}
+    """
+    
+    response = await test_client.post("/graphql", json={"query": update_query})
+    
+    assert response.status_code == 200
+    data = response.json()
+    
+    assert "errors" not in data
+    task = data["data"]["updateTask"]
+    
+    assert task["title"] == "Only Title Updated"
+    assert task["priority"] == "HIGH"
+
+
+@pytest.mark.asyncio
+async def test_graphql_update_task_nonexistent(test_client):
+    """Test updating a non-existent task returns null"""
+    
+    update_query = """
+    mutation {
+        updateTask(id: 99999, input: {
+            title: "Updated Title"
+        }) {
+            id
+            title
+        }
+    }
+    """
+    
+    response = await test_client.post("/graphql", json={"query": update_query})
+    
+    assert response.status_code == 200
+    data = response.json()
+    
+    assert "errors" not in data
+    assert data["data"]["updateTask"] is None

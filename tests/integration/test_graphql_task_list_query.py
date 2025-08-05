@@ -443,6 +443,7 @@ async def test_graphql_task_list_with_tasks_filtered_by_status(test_client):
             }}
             totalTasks
             completedTasks
+            completionPercentage
         }}
     }}
     """
@@ -461,6 +462,7 @@ async def test_graphql_task_list_with_tasks_filtered_by_status(test_client):
         assert task["status"] == "PENDING"
     
     # Should still show total stats
+    assert abs(task_list_with_tasks["completionPercentage"] - 33.33) < 0.1  # ~33.33%
     assert task_list_with_tasks["totalTasks"] == 3
     assert task_list_with_tasks["completedTasks"] == 1
 
