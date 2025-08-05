@@ -5,6 +5,7 @@ from strawberry.fastapi import GraphQLRouter
 from src.presentation.rest.controllers.task_list_controller import router as task_list_router
 from src.presentation.rest.controllers.task_controller import router as task_router
 from src.presentation.graphql.schema import schema
+from src.presentation.graphql.context import get_graphql_context
 
 app = FastAPI(
     title="Task Management API",
@@ -26,7 +27,7 @@ app.include_router(task_list_router, prefix="/api")
 app.include_router(task_router, prefix="/api")
 
 # Include GraphQL router
-graphql_app = GraphQLRouter(schema)
+graphql_app = GraphQLRouter(schema, context_getter=get_graphql_context)
 app.include_router(graphql_app, prefix="/graphql")
 
 

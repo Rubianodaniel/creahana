@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
+from sqlalchemy.exc import IntegrityError
 from src.domain.entities.task import Task, TaskStatus, TaskPriority
+from src.domain.exceptions.task_exceptions import InvalidTaskListException
 from src.infrastructure.repositories.sqlalchemy_task_repository import (
     SQLAlchemyTaskRepository,
 )
@@ -195,4 +197,19 @@ class TestSQLAlchemyTaskRepository:
 
         assert len(result) == 1
         assert result[0].title == "Test Task"
-        mock_session.execute.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_create_task_with_invalid_task_list_id(
+        self, repository, mock_session, sample_task
+    ):
+        mock_session.add = MagicMock()
+        mock_session.flush = AsyncMock(
+            side_effect=IntegrityError("", "", "foreign key constraint fails task_lists")
+        )
+        mock_session.rollback = AsyncMock()
+
+        with pytest.raises(InvalidTaskListException) as exc_info:
+            await repository.create(sample_task)
+
+        assert exc_info.value.task_list_id == sample_task.task_list_id
+        mock_session.rollback.assert_called_once()

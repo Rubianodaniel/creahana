@@ -1,8 +1,10 @@
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
+from sqlalchemy.exc import IntegrityError
 from src.domain.entities.task import Task, TaskStatus, TaskPriority
 from src.domain.outputs.task_repository import TaskRepository
+from src.domain.exceptions.task_exceptions import InvalidTaskListException
 from src.infrastructure.database.models.task_model import TaskModel
 from src.infrastructure.database.mappers import TaskMapper
 
@@ -12,11 +14,20 @@ class SQLAlchemyTaskRepository(TaskRepository):
         self.session = session
 
     async def create(self, task: Task) -> Task:
-        model = TaskMapper.to_model(task)
-        self.session.add(model)
-        await self.session.flush()  # Solo flush para obtener ID
-        await self.session.refresh(model)
-        return TaskMapper.to_domain(model)
+        try:
+            model = TaskMapper.to_model(task)
+            self.session.add(model)
+            await self.session.flush()  # Solo flush para obtener ID
+            await self.session.refresh(model)
+            return TaskMapper.to_domain(model)
+        except IntegrityError as e:
+            await self.session.rollback()
+            # Check if it's a foreign key constraint error for task_list_id
+            if "foreign key constraint" in str(e).lower() or "violates foreign key" in str(e).lower():
+                if "task_list_id" in str(e) or "task_lists" in str(e):
+                    raise InvalidTaskListException(task.task_list_id)
+            # Re-raise other integrity errors
+            raise e
 
     async def get_by_id(self, task_id: int) -> Optional[Task]:
         result = await self.session.execute(

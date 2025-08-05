@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
+from sqlalchemy.exc import IntegrityError
 from src.domain.entities.task_list import TaskList
+from src.domain.exceptions.task_list_exceptions import TaskListHasTasksException
 from src.infrastructure.repositories.sqlalchemy_task_list_repository import (
     SQLAlchemyTaskListRepository,
 )
@@ -108,13 +110,13 @@ class TestSQLAlchemyTaskListRepository:
         mock_result.scalar_one_or_none.return_value = sample_task_list_model
         mock_session.execute = AsyncMock(return_value=mock_result)
         mock_session.delete = AsyncMock()
-        mock_session.commit = AsyncMock()
+        mock_session.flush = AsyncMock()
 
         result = await repository.delete(1)
 
         assert result is True
         mock_session.delete.assert_called_once_with(sample_task_list_model)
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_delete_task_list_not_found(self, repository, mock_session):
@@ -125,6 +127,25 @@ class TestSQLAlchemyTaskListRepository:
         result = await repository.delete(999)
 
         assert result is False
+
+    @pytest.mark.asyncio
+    async def test_delete_task_list_with_foreign_key_constraint(
+        self, repository, mock_session, sample_task_list_model
+    ):
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = sample_task_list_model
+        mock_session.execute = AsyncMock(return_value=mock_result)
+        mock_session.delete = AsyncMock()
+        mock_session.flush = AsyncMock(
+            side_effect=IntegrityError("", "", "foreign key constraint fails")
+        )
+        mock_session.rollback = AsyncMock()
+
+        with pytest.raises(TaskListHasTasksException) as exc_info:
+            await repository.delete(1)
+
+        assert exc_info.value.task_list_id == 1
+        mock_session.rollback.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_list_all_task_lists(

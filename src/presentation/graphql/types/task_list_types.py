@@ -65,6 +65,12 @@ class TaskListCreateInput:
     title: str
     description: Optional[str] = None
     user_id: Optional[int] = None
+    
+    def __post_init__(self):
+        if not self.title or not self.title.strip():
+            raise ValueError("Title cannot be empty")
+        if len(self.title) > 200:
+            raise ValueError("Title cannot exceed 200 characters")
 
 
 @strawberry.input

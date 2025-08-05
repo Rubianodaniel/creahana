@@ -4,6 +4,7 @@ from strawberry.types import Info
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.domain.entities.task_list import TaskList
 from src.domain.entities.task import TaskStatus, TaskPriority
+from src.domain.exceptions.task_list_exceptions import TaskListHasTasksException
 from src.application.use_cases.task_list.task_list_service import TaskListService
 from src.presentation.shared.dependencies.service_factory import ServiceFactory
 from src.presentation.graphql.types.task_list_types import (
@@ -15,14 +16,8 @@ from src.presentation.graphql.types.task_list_types import (
     task_list_to_graphql,
     task_to_graphql
 )
-from src.infrastructure.database.connection import get_db_session
+from src.presentation.graphql.context import GraphQLContext
 
-
-async def get_session():
-    """Helper to get session respecting dependency overrides"""
-    session_gen = get_db_session()
-    session = await session_gen.__anext__()
-    return session
 
 
 
@@ -30,37 +25,61 @@ async def get_session():
 @strawberry.type
 class TaskListQuery:
     @strawberry.field
-    async def task_list(self, id: int) -> Optional[TaskListType]:
-        session = await get_session()
-        service = ServiceFactory.create_task_list_service(session)
-        result = await service.get(id)
-        if not result:
+    async def task_list(self, id: int, info: Info[GraphQLContext, None]) -> Optional[TaskListType]:
+        try:
+            if id <= 0:
+                raise ValueError("Task list ID must be a positive integer")
+            
+            session = info.context.db_session
+            service = ServiceFactory.create_task_list_service(session)
+            result = await service.get(id)
+            
+            if not result:
+                return None
+                
+            return task_list_to_graphql(result)
+        except ValueError as e:
+            print(f"GraphQL task_list validation error: {e}")
             return None
-        return task_list_to_graphql(result)
+        except Exception as e:
+            print(f"GraphQL task_list error: {e}")
+            raise Exception(f"Failed to retrieve task list: {str(e)}")
 
     @strawberry.field
-    async def task_lists(self) -> List[TaskListType]:
-        session = await get_session()
-        service = ServiceFactory.create_task_list_service(session)
-        results = await service.list_all()
-        return [task_list_to_graphql(result) for result in results]
+    async def task_lists(self, info: Info[GraphQLContext, None]) -> List[TaskListType]:
+        try:
+            session = info.context.db_session
+            service = ServiceFactory.create_task_list_service(session)
+            results = await service.list_all()
+            return [task_list_to_graphql(result) for result in results]
+        except Exception as e:
+            print(f"GraphQL task_lists error: {e}")
+            raise Exception(f"Failed to retrieve task lists: {str(e)}")
 
     @strawberry.field
     async def task_list_with_tasks(
         self,
         id: int,
+        info: Info[GraphQLContext, None],
         status: Optional[str] = None,
         priority: Optional[str] = None
     ) -> Optional[TaskListWithTasksType]:
-        session = await get_session()
-        service = ServiceFactory.create_task_list_service(session)
-        
-        # Convert string enums to domain enums
-        status_enum = TaskStatus(status) if status else None
-        priority_enum = TaskPriority(priority) if priority else None
-        
         try:
+            if id <= 0:
+                raise ValueError("Task list ID must be a positive integer")
+            
+            session = info.context.db_session
+            service = ServiceFactory.create_task_list_service(session)
+            
+            # Convert string enums to domain enums
+            status_enum = TaskStatus(status) if status else None
+            priority_enum = TaskPriority(priority) if priority else None
+            
             result = await service.get_tasks_with_completion(id, status_enum, priority_enum)
+            
+            if not result:
+                return None
+                
             return TaskListWithTasksType(
                 id=result.task_list.id,
                 title=result.task_list.title,
@@ -74,15 +93,19 @@ class TaskListQuery:
                 total_tasks=result.total_tasks,
                 completed_tasks=result.completed_tasks
             )
-        except ValueError:
+        except ValueError as e:
+            print(f"GraphQL task_list_with_tasks validation error: {e}")
             return None
+        except Exception as e:
+            print(f"GraphQL task_list_with_tasks error: {e}")
+            raise Exception(f"Failed to retrieve task list with tasks: {str(e)}")
 
 
 @strawberry.type
 class TaskListMutation:
     @strawberry.mutation
-    async def create_task_list(self, input: TaskListCreateInput) -> TaskListType:
-        session = await get_session()
+    async def create_task_list(self, input: TaskListCreateInput, info: Info[GraphQLContext, None]) -> TaskListType:
+        session = info.context.db_session
         service = ServiceFactory.create_task_list_service(session)
         
         task_list = TaskList(
@@ -95,14 +118,20 @@ class TaskListMutation:
         return task_list_to_graphql(result)
 
     @strawberry.mutation
-    async def update_task_list(self, id: int, input: TaskListUpdateInput) -> Optional[TaskListType]:
-        session = await get_session()
+    async def update_task_list(self, id: int, input: TaskListUpdateInput, info: Info[GraphQLContext, None]) -> Optional[TaskListType]:
+        session = info.context.db_session
         service = ServiceFactory.create_task_list_service(session)
         
+        # Get existing task list first
+        existing_task_list = await service.get(id)
+        if not existing_task_list:
+            return None
+        
+        # Only update fields that are provided (not None)
         task_list = TaskList(
-            title=input.title,
-            description=input.description,
-            user_id=input.user_id
+            title=input.title if input.title is not None else existing_task_list.title,
+            description=input.description if input.description is not None else existing_task_list.description,
+            user_id=input.user_id if input.user_id is not None else existing_task_list.user_id
         )
         
         try:
@@ -112,7 +141,14 @@ class TaskListMutation:
             return None
 
     @strawberry.mutation
-    async def delete_task_list(self, id: int) -> bool:
-        session = await get_session()
-        service = ServiceFactory.create_task_list_service(session)
-        return await service.delete(id)
+    async def delete_task_list(self, id: int, info: Info[GraphQLContext, None]) -> bool:
+        try:
+            session = info.context.db_session
+            service = ServiceFactory.create_task_list_service(session)
+            return await service.delete(id)
+        except TaskListHasTasksException as e:
+            print(f"GraphQL deleteTaskList error: {e}")
+            raise Exception("Cannot delete task list that contains tasks. Please delete all tasks first.")
+        except Exception as e:
+            print(f"GraphQL deleteTaskList error: {e}")
+            raise Exception(f"Failed to delete task list: {str(e)}")

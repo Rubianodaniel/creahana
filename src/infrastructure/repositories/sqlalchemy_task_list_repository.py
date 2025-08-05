@@ -1,8 +1,10 @@
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from src.domain.entities.task_list import TaskList
 from src.domain.outputs.task_list_repository import TaskListRepository
+from src.domain.exceptions.task_list_exceptions import TaskListHasTasksException
 from src.infrastructure.database.models.task_list_model import TaskListModel
 from src.infrastructure.database.mappers import TaskListMapper
 
@@ -44,15 +46,23 @@ class SQLAlchemyTaskListRepository(TaskListRepository):
         return TaskListMapper.to_domain(model)
 
     async def delete(self, task_list_id: int) -> bool:
-        result = await self.session.execute(
-            select(TaskListModel).where(TaskListModel.id == task_list_id)
-        )
-        model = result.scalar_one_or_none()
-        if model:
-            await self.session.delete(model)
-            await self.session.commit()
-            return True
-        return False
+        try:
+            result = await self.session.execute(
+                select(TaskListModel).where(TaskListModel.id == task_list_id)
+            )
+            model = result.scalar_one_or_none()
+            if model:
+                await self.session.delete(model)
+                await self.session.flush()  # Use flush instead of commit
+                return True
+            return False
+        except IntegrityError as e:
+            await self.session.rollback()
+            # Check if it's a foreign key constraint error
+            if "foreign key constraint" in str(e).lower() or "violates foreign key" in str(e).lower():
+                raise TaskListHasTasksException(task_list_id)
+            # Re-raise other integrity errors
+            raise e
 
     async def list_all(self) -> List[TaskList]:
         result = await self.session.execute(select(TaskListModel))
