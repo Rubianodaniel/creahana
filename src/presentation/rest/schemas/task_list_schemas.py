@@ -1,6 +1,7 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, ConfigDict, Field
+from src.presentation.rest.schemas.task_schemas import TaskResponseSchema
 
 
 class TaskListCreateSchema(BaseModel):
@@ -10,8 +11,9 @@ class TaskListCreateSchema(BaseModel):
 
 
 class TaskListUpdateSchema(BaseModel):
-    title: str
+    title: Optional[str] = None
     description: Optional[str] = None
+    user_id: Optional[int] = None
 
 
 class TaskListResponseSchema(BaseModel):
@@ -24,3 +26,10 @@ class TaskListResponseSchema(BaseModel):
     is_active: bool
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+
+class TaskListWithTasksResponseSchema(TaskListResponseSchema):
+    tasks: List[TaskResponseSchema]
+    completion_percentage: float
+    total_tasks: int
+    completed_tasks: int

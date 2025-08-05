@@ -16,11 +16,33 @@ class TaskService(TaskUseCases):
         return await self.repository.get_by_id(task_id)
 
     async def update(self, task_id: int, task: Task) -> Task:
-        task.id = task_id
-        return await self.repository.update(task)
+        # Get current task to preserve unmodified fields
+        current_task = await self.repository.get_by_id(task_id)
+        if not current_task:
+            raise ValueError("Task not found")
+        
+        # Update only the fields that are provided (not None)
+        updated_task = Task(
+            id=task_id,
+            title=task.title if task.title is not None else current_task.title,
+            description=task.description if task.description is not None else current_task.description,
+            task_list_id=task.task_list_id if task.task_list_id is not None else current_task.task_list_id,
+            status=task.status if task.status is not None else current_task.status,
+            priority=task.priority if task.priority is not None else current_task.priority,
+            assigned_user_id=task.assigned_user_id if task.assigned_user_id is not None else current_task.assigned_user_id,
+            due_date=task.due_date if task.due_date is not None else current_task.due_date,
+            is_active=current_task.is_active,
+            created_at=current_task.created_at,
+            updated_at=current_task.updated_at
+        )
+        
+        return await self.repository.update(updated_task)
 
     async def delete(self, task_id: int) -> bool:
         return await self.repository.delete(task_id)
+
+    async def list_all(self) -> List[Task]:
+        return await self.repository.list_all()
 
     async def change_status(self, task_id: int, status: TaskStatus) -> Task:
         task = await self.repository.get_by_id(task_id)

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.presentation.rest.controllers.task_list_controller import router as task_list_router
-
+from src.presentation.rest.controllers.task_controller import router as task_router
 
 app = FastAPI(
     title="Task Management API",
@@ -21,6 +21,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(task_list_router, prefix="/api")
+app.include_router(task_router, prefix="/api")
 
 
 @app.get("/")

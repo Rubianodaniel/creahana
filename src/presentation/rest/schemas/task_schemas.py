@@ -17,6 +17,7 @@ class TaskCreateSchema(BaseModel):
 class TaskUpdateSchema(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
+    task_list_id: Optional[int] = None
     status: Optional[TaskStatus] = None
     priority: Optional[TaskPriority] = None
     assigned_user_id: Optional[int] = None

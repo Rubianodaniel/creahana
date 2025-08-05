@@ -14,7 +14,7 @@ class SQLAlchemyTaskRepository(TaskRepository):
     async def create(self, task: Task) -> Task:
         model = TaskMapper.to_model(task)
         self.session.add(model)
-        await self.session.commit()
+        await self.session.flush()  # Solo flush para obtener ID
         await self.session.refresh(model)
         return TaskMapper.to_domain(model)
 
@@ -43,7 +43,7 @@ class SQLAlchemyTaskRepository(TaskRepository):
         model.due_date = task.due_date
         model.is_active = task.is_active
 
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(model)
         return TaskMapper.to_domain(model)
 
@@ -54,9 +54,14 @@ class SQLAlchemyTaskRepository(TaskRepository):
         model = result.scalar_one_or_none()
         if model:
             await self.session.delete(model)
-            await self.session.commit()
+            await self.session.flush()
             return True
         return False
+
+    async def list_all(self) -> List[Task]:
+        result = await self.session.execute(select(TaskModel))
+        models = result.scalars().all()
+        return [TaskMapper.to_domain(model) for model in models]
 
     async def get_by_task_list_id(self, task_list_id: int) -> List[Task]:
         result = await self.session.execute(

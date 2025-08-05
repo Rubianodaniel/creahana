@@ -44,14 +44,14 @@ class TestSQLAlchemyTaskRepository:
     async def test_create_task(
         self, repository, mock_session, sample_task, sample_task_model
     ):
-        mock_session.commit = AsyncMock()
+        mock_session.flush = AsyncMock()
         mock_session.refresh = AsyncMock()
         mock_session.add = MagicMock()
 
         result = await repository.create(sample_task)
 
         mock_session.add.assert_called_once()
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
         mock_session.refresh.assert_called_once()
         assert result.title == sample_task.title
         assert result.task_list_id == sample_task.task_list_id
@@ -87,13 +87,13 @@ class TestSQLAlchemyTaskRepository:
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = sample_task_model
         mock_session.execute = AsyncMock(return_value=mock_result)
-        mock_session.commit = AsyncMock()
+        mock_session.flush = AsyncMock()
         mock_session.refresh = AsyncMock()
 
         result = await repository.update(sample_task)
 
         assert result.title == sample_task.title
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
         mock_session.refresh.assert_called_once()
 
     @pytest.mark.asyncio
@@ -113,13 +113,13 @@ class TestSQLAlchemyTaskRepository:
         mock_result.scalar_one_or_none.return_value = sample_task_model
         mock_session.execute = AsyncMock(return_value=mock_result)
         mock_session.delete = AsyncMock()
-        mock_session.commit = AsyncMock()
+        mock_session.flush = AsyncMock()
 
         result = await repository.delete(1)
 
         assert result is True
         mock_session.delete.assert_called_once_with(sample_task_model)
-        mock_session.commit.assert_called_once()
+        mock_session.flush.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_delete_task_not_found(self, repository, mock_session):
