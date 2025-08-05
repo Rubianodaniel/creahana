@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: crehana_db
+    environment:
+      POSTGRES_DB: crehana_db
+      POSTGRES_USER: crehana_user
+      POSTGRES_PASSWORD: crehana_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - crehana_network
+
+  postgres_test:
+    image: postgres:15-alpine
+    container_name: crehana_test_db
+    environment:
+      POSTGRES_DB: crehana_test_db
+      POSTGRES_USER: crehana_user
+      POSTGRES_PASSWORD: crehana_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    networks:
+      - crehana_network
+
+volumes:
+  postgres_data:
+  postgres_test_data:
+
+networks:
+  crehana_network:
+    driver: bridge

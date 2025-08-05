@@ -1,25 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from pydantic_settings import BaseSettings
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-
-class DatabaseSettings(BaseSettings):
-    database_url: str
-
-    class Config:
-        env_file = ".env"
+from src.infrastructure.config.settings import settings
 
 
 Base = declarative_base()
 
 
-def get_settings():
-    return DatabaseSettings()
-
-
 def create_engine():
-    settings = get_settings()
     return create_async_engine(settings.database_url, echo=True)
 
 
@@ -33,5 +21,7 @@ async def get_db_session() -> AsyncSession:
     async with session_factory() as session:
         try:
             yield session
-        finally:
-            await session.close()
+            await session.commit()  # ✅ Commit aquí
+        except Exception:
+            await session.rollback()
+            raise

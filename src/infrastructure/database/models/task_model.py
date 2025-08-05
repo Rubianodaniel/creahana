@@ -1,7 +1,7 @@
-from datetime import datetime
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, ForeignKey
 from src.infrastructure.database.connection import Base
 from src.domain.entities.task import TaskStatus, TaskPriority
+from src.infrastructure.utils.datetime_utils import utc_now
 
 
 class TaskModel(Base):
@@ -18,5 +18,5 @@ class TaskModel(Base):
     assigned_user_id = Column(Integer, nullable=True, index=True)
     due_date = Column(DateTime, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)

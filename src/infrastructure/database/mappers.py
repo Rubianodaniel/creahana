@@ -19,15 +19,21 @@ class TaskListMapper:
 
     @staticmethod
     def to_model(entity: TaskList) -> TaskListModel:
-        return TaskListModel(
-            id=entity.id,
-            title=entity.title,
-            description=entity.description,
-            user_id=entity.user_id,
-            is_active=entity.is_active,
-            created_at=entity.created_at,
-            updated_at=entity.updated_at,
-        )
+        model_data = {
+            "id": entity.id,
+            "title": entity.title,
+            "description": entity.description,
+            "user_id": entity.user_id,
+            "is_active": entity.is_active,
+        }
+        
+        # Only set timestamps if they exist
+        if entity.created_at:
+            model_data["created_at"] = entity.created_at
+        if entity.updated_at:
+            model_data["updated_at"] = entity.updated_at
+            
+        return TaskListModel(**model_data)
 
 
 class TaskMapper:

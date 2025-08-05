@@ -43,7 +43,6 @@ class TestSQLAlchemyTaskListRepository:
         result = await repository.create(sample_task_list)
 
         mock_session.add.assert_called_once()
-        mock_session.commit.assert_called_once()
         mock_session.refresh.assert_called_once()
         assert result.title == sample_task_list.title
         assert result.user_id == sample_task_list.user_id

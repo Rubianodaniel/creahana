@@ -14,7 +14,7 @@ class SQLAlchemyTaskListRepository(TaskListRepository):
     async def create(self, task_list: TaskList) -> TaskList:
         model = TaskListMapper.to_model(task_list)
         self.session.add(model)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(model)
         return TaskListMapper.to_domain(model)
 
