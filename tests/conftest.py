@@ -1,15 +1,16 @@
+import asyncio
+
 import httpx
 import pytest
-import asyncio
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from alembic.config import Config
-from alembic import command
 
+from alembic import command
+from alembic.config import Config
 from main import app  # Asegúrate de que esta importación sea correcta
-from src.infrastructure.database.connection import Base, get_db_session
 from src.infrastructure.config.settings import settings
+from src.infrastructure.database.connection import Base, get_db_session
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -20,14 +21,12 @@ def setup_test_database():
         raise ValueError("La variable de entorno TEST_DATABASE_URL no está configurada")
 
     sync_url = test_db_url.replace("postgresql+asyncpg://", "postgresql://")
-    
+
     alembic_cfg = Config("alembic.ini")
     alembic_cfg.set_main_option("sqlalchemy.url", sync_url)
-    
+
     command.upgrade(alembic_cfg, "head")
     yield
-
-
 
 
 @pytest.fixture(scope="session")
@@ -48,6 +47,7 @@ async def test_engine():
 
 # --- Fixtures de Alcance de Función (Se ejecutan para cada test) ---
 
+
 @pytest.fixture
 async def db_session(test_engine):
     """
@@ -56,10 +56,8 @@ async def db_session(test_engine):
     # (Este fixture está bien, no se necesita cambiar)
     connection = await test_engine.connect()
     trans = await connection.begin()
-    
-    TestingSessionLocal = sessionmaker(
-        bind=connection, class_=AsyncSession, expire_on_commit=False
-    )
+
+    TestingSessionLocal = sessionmaker(bind=connection, class_=AsyncSession, expire_on_commit=False)
     session = TestingSessionLocal()
 
     try:
@@ -75,6 +73,7 @@ async def test_client(db_session: AsyncSession):
     """
     Crea un cliente de prueba de httpx asíncrono que utiliza la sesión de BD de prueba.
     """
+
     def override_get_db_session():
         """Sobrescribe la dependencia para inyectar la sesión de prueba."""
         yield db_session

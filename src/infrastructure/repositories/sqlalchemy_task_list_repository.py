@@ -1,12 +1,14 @@
 from typing import List, Optional
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.domain.entities.task_list import TaskList
-from src.domain.outputs.task_list_repository import TaskListRepository
 from src.domain.exceptions.task_list_exceptions import TaskListHasTasksException
-from src.infrastructure.database.models.task_list_model import TaskListModel
+from src.domain.outputs.task_list_repository import TaskListRepository
 from src.infrastructure.database.mappers import TaskListMapper
+from src.infrastructure.database.models.task_list_model import TaskListModel
 
 
 class SQLAlchemyTaskListRepository(TaskListRepository):
@@ -21,35 +23,29 @@ class SQLAlchemyTaskListRepository(TaskListRepository):
         return TaskListMapper.to_domain(model)
 
     async def get_by_id(self, task_list_id: int) -> Optional[TaskList]:
-        result = await self.session.execute(
-            select(TaskListModel).where(TaskListModel.id == task_list_id)
-        )
+        result = await self.session.execute(select(TaskListModel).where(TaskListModel.id == task_list_id))
         model = result.scalar_one_or_none()
         return TaskListMapper.to_domain(model) if model else None
 
     async def update(self, task_list: TaskList) -> TaskList:
-        result = await self.session.execute(
-            select(TaskListModel).where(TaskListModel.id == task_list.id)
-        )
+        result = await self.session.execute(select(TaskListModel).where(TaskListModel.id == task_list.id))
         model = result.scalar_one_or_none()
-        
+
         if not model:
             raise ValueError(f"TaskList with id {task_list.id} not found")
-        
+
         model.title = task_list.title
         model.description = task_list.description
         model.user_id = task_list.user_id
         model.is_active = task_list.is_active
-        
+
         await self.session.commit()
         await self.session.refresh(model)
         return TaskListMapper.to_domain(model)
 
     async def delete(self, task_list_id: int) -> bool:
         try:
-            result = await self.session.execute(
-                select(TaskListModel).where(TaskListModel.id == task_list_id)
-            )
+            result = await self.session.execute(select(TaskListModel).where(TaskListModel.id == task_list_id))
             model = result.scalar_one_or_none()
             if model:
                 await self.session.delete(model)

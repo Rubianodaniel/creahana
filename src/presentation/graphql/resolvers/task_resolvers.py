@@ -1,21 +1,19 @@
 from typing import List, Optional
+
 import strawberry
 from strawberry.types import Info
-from src.domain.entities.task import Task, TaskStatus, TaskPriority
+
+from src.domain.entities.task import Task, TaskPriority, TaskStatus
 from src.domain.exceptions.task_exceptions import InvalidTaskListException
-from src.application.use_cases.task.task_service import TaskService
-from src.presentation.shared.dependencies.service_factory import ServiceFactory
-from src.presentation.graphql.types.task_list_types import (
-    TaskType,
-    TaskCreateInput,
-    TaskUpdateInput,
-    TaskStatusUpdateInput,
-    task_to_graphql
-)
 from src.presentation.graphql.context import GraphQLContext
-from src.infrastructure.database.connection import get_db_session
-
-
+from src.presentation.graphql.types.task_list_types import (
+    TaskCreateInput,
+    TaskStatusUpdateInput,
+    TaskType,
+    TaskUpdateInput,
+    task_to_graphql,
+)
+from src.presentation.shared.dependencies.service_factory import ServiceFactory
 
 
 @strawberry.type
@@ -25,14 +23,14 @@ class TaskQuery:
         try:
             if id <= 0:
                 raise ValueError("Task ID must be a positive integer")
-            
+
             session = info.context.db_session
             service = ServiceFactory.create_task_service(session)
             result = await service.get(id)
-            
+
             if not result:
                 return None
-                
+
             return task_to_graphql(result)
         except ValueError as e:
             print(f"GraphQL task validation error: {e}")
@@ -60,7 +58,7 @@ class TaskMutation:
         try:
             session = info.context.db_session
             service = ServiceFactory.create_task_service(session)
-            
+
             task = Task(
                 title=input.title,
                 description=input.description,
@@ -68,9 +66,9 @@ class TaskMutation:
                 status=TaskStatus(input.status.value),
                 priority=TaskPriority(input.priority.value),
                 assigned_user_id=input.assigned_user_id,
-                due_date=input.due_date
+                due_date=input.due_date,
             )
-            
+
             result = await service.create(task)
             return task_to_graphql(result)
         except InvalidTaskListException as e:
@@ -84,7 +82,7 @@ class TaskMutation:
     async def update_task(self, id: int, input: TaskUpdateInput, info: Info[GraphQLContext, None]) -> Optional[TaskType]:
         session = info.context.db_session
         service = ServiceFactory.create_task_service(session)
-        
+
         task = Task(
             title=input.title,
             description=input.description,
@@ -92,9 +90,9 @@ class TaskMutation:
             status=TaskStatus(input.status.value) if input.status else None,
             priority=TaskPriority(input.priority.value) if input.priority else None,
             assigned_user_id=input.assigned_user_id,
-            due_date=input.due_date
+            due_date=input.due_date,
         )
-        
+
         try:
             result = await service.update(id, task)
             return task_to_graphql(result)
@@ -111,7 +109,7 @@ class TaskMutation:
     async def change_task_status(self, id: int, input: TaskStatusUpdateInput, info: Info[GraphQLContext, None]) -> Optional[TaskType]:
         session = info.context.db_session
         service = ServiceFactory.create_task_service(session)
-        
+
         try:
             result = await service.change_status(id, TaskStatus(input.status.value))
             return task_to_graphql(result)

@@ -1,6 +1,10 @@
 import strawberry
-from src.presentation.graphql.resolvers.task_list_resolvers import TaskListQuery, TaskListMutation
-from src.presentation.graphql.resolvers.task_resolvers import TaskQuery, TaskMutation
+
+from src.presentation.graphql.resolvers.task_list_resolvers import (
+    TaskListMutation,
+    TaskListQuery,
+)
+from src.presentation.graphql.resolvers.task_resolvers import TaskMutation, TaskQuery
 
 
 @strawberry.type

@@ -1,12 +1,14 @@
 from typing import List, Optional
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
+
+from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
-from src.domain.entities.task import Task, TaskStatus, TaskPriority
-from src.domain.outputs.task_repository import TaskRepository
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.domain.entities.task import Task, TaskPriority, TaskStatus
 from src.domain.exceptions.task_exceptions import InvalidTaskListException
-from src.infrastructure.database.models.task_model import TaskModel
+from src.domain.outputs.task_repository import TaskRepository
 from src.infrastructure.database.mappers import TaskMapper
+from src.infrastructure.database.models.task_model import TaskModel
 
 
 class SQLAlchemyTaskRepository(TaskRepository):
@@ -30,16 +32,12 @@ class SQLAlchemyTaskRepository(TaskRepository):
             raise e
 
     async def get_by_id(self, task_id: int) -> Optional[Task]:
-        result = await self.session.execute(
-            select(TaskModel).where(TaskModel.id == task_id)
-        )
+        result = await self.session.execute(select(TaskModel).where(TaskModel.id == task_id))
         model = result.scalar_one_or_none()
         return TaskMapper.to_domain(model) if model else None
 
     async def update(self, task: Task) -> Task:
-        result = await self.session.execute(
-            select(TaskModel).where(TaskModel.id == task.id)
-        )
+        result = await self.session.execute(select(TaskModel).where(TaskModel.id == task.id))
         model = result.scalar_one_or_none()
 
         if not model:
@@ -59,9 +57,7 @@ class SQLAlchemyTaskRepository(TaskRepository):
         return TaskMapper.to_domain(model)
 
     async def delete(self, task_id: int) -> bool:
-        result = await self.session.execute(
-            select(TaskModel).where(TaskModel.id == task_id)
-        )
+        result = await self.session.execute(select(TaskModel).where(TaskModel.id == task_id))
         model = result.scalar_one_or_none()
         if model:
             await self.session.delete(model)
@@ -75,9 +71,7 @@ class SQLAlchemyTaskRepository(TaskRepository):
         return [TaskMapper.to_domain(model) for model in models]
 
     async def get_by_task_list_id(self, task_list_id: int) -> List[Task]:
-        result = await self.session.execute(
-            select(TaskModel).where(TaskModel.task_list_id == task_list_id)
-        )
+        result = await self.session.execute(select(TaskModel).where(TaskModel.task_list_id == task_list_id))
         models = result.scalars().all()
         return [TaskMapper.to_domain(model) for model in models]
 

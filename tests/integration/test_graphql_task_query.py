@@ -4,7 +4,7 @@ import pytest
 @pytest.mark.asyncio
 async def test_graphql_task_get_existing(test_client):
     """Test getting an existing task by ID"""
-    
+
     # First create a task list
     create_task_list_query = """
     mutation {
@@ -16,10 +16,10 @@ async def test_graphql_task_get_existing(test_client):
         }
     }
     """
-    
+
     task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
     task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
-    
+
     # Create a task
     create_task_query = f"""
     mutation {{
@@ -34,13 +34,13 @@ async def test_graphql_task_get_existing(test_client):
         }}
     }}
     """
-    
+
     create_response = await test_client.post("/graphql", json={"query": create_task_query})
     assert create_response.status_code == 200
-    
+
     create_data = create_response.json()
     task_id = create_data["data"]["createTask"]["id"]
-    
+
     # Query the task
     get_query = f"""
     query {{
@@ -57,12 +57,12 @@ async def test_graphql_task_get_existing(test_client):
         }}
     }}
     """
-    
+
     response = await test_client.post("/graphql", json={"query": get_query})
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     assert "errors" not in data
     assert "data" in data
     assert data["data"]["task"] is not None
@@ -79,7 +79,7 @@ async def test_graphql_task_get_existing(test_client):
 @pytest.mark.asyncio
 async def test_graphql_task_not_found(test_client):
     """Test getting a non-existent task returns null"""
-    
+
     get_query = """
     query {
         task(id: 99999) {
@@ -88,12 +88,12 @@ async def test_graphql_task_not_found(test_client):
         }
     }
     """
-    
+
     response = await test_client.post("/graphql", json={"query": get_query})
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     assert "errors" not in data
     assert "data" in data
     assert data["data"]["task"] is None
@@ -102,7 +102,7 @@ async def test_graphql_task_not_found(test_client):
 @pytest.mark.asyncio
 async def test_graphql_task_invalid_id_zero(test_client):
     """Test getting task with ID 0 returns null (validation error)"""
-    
+
     get_query = """
     query {
         task(id: 0) {
@@ -111,12 +111,12 @@ async def test_graphql_task_invalid_id_zero(test_client):
         }
     }
     """
-    
+
     response = await test_client.post("/graphql", json={"query": get_query})
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     assert "errors" not in data
     assert "data" in data
     assert data["data"]["task"] is None
@@ -125,7 +125,7 @@ async def test_graphql_task_invalid_id_zero(test_client):
 @pytest.mark.asyncio
 async def test_graphql_task_invalid_id_negative(test_client):
     """Test getting task with negative ID returns null (validation error)"""
-    
+
     get_query = """
     query {
         task(id: -5) {
@@ -134,12 +134,12 @@ async def test_graphql_task_invalid_id_negative(test_client):
         }
     }
     """
-    
+
     response = await test_client.post("/graphql", json={"query": get_query})
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     assert "errors" not in data
     assert "data" in data
     assert data["data"]["task"] is None
@@ -148,7 +148,7 @@ async def test_graphql_task_invalid_id_negative(test_client):
 @pytest.mark.asyncio
 async def test_graphql_task_with_all_fields(test_client):
     """Test getting task requesting all available fields"""
-    
+
     # Create a task list
     create_task_list_query = """
     mutation {
@@ -160,10 +160,10 @@ async def test_graphql_task_with_all_fields(test_client):
         }
     }
     """
-    
+
     task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
     task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
-    
+
     # Create a task with all possible data
     create_task_query = f"""
     mutation {{
@@ -179,10 +179,10 @@ async def test_graphql_task_with_all_fields(test_client):
         }}
     }}
     """
-    
+
     create_response = await test_client.post("/graphql", json={"query": create_task_query})
     task_id = create_response.json()["data"]["createTask"]["id"]
-    
+
     # Query with all possible fields
     get_query = f"""
     query {{
@@ -200,16 +200,16 @@ async def test_graphql_task_with_all_fields(test_client):
         }}
     }}
     """
-    
+
     response = await test_client.post("/graphql", json={"query": get_query})
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     assert "errors" not in data
     assert "data" in data
     assert data["data"]["task"] is not None
-    
+
     task = data["data"]["task"]
     assert task["id"] == task_id
     assert task["title"] == "Complete Task"
@@ -226,7 +226,7 @@ async def test_graphql_task_with_all_fields(test_client):
 @pytest.mark.asyncio
 async def test_graphql_task_minimal_fields(test_client):
     """Test getting task with minimal field selection"""
-    
+
     # Create task list and task
     create_task_list_query = """
     mutation {
@@ -237,10 +237,10 @@ async def test_graphql_task_minimal_fields(test_client):
         }
     }
     """
-    
+
     task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
     task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
-    
+
     create_task_query = f"""
     mutation {{
         createTask(input: {{
@@ -251,10 +251,10 @@ async def test_graphql_task_minimal_fields(test_client):
         }}
     }}
     """
-    
+
     create_response = await test_client.post("/graphql", json={"query": create_task_query})
     task_id = create_response.json()["data"]["createTask"]["id"]
-    
+
     # Query with only required fields
     get_query = f"""
     query {{
@@ -265,12 +265,12 @@ async def test_graphql_task_minimal_fields(test_client):
         }}
     }}
     """
-    
+
     response = await test_client.post("/graphql", json={"query": get_query})
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     assert "errors" not in data
     task = data["data"]["task"]
     assert task["id"] == task_id
@@ -283,7 +283,7 @@ async def test_graphql_task_minimal_fields(test_client):
 @pytest.mark.asyncio
 async def test_graphql_tasks_get_all(test_client):
     """Test getting all tasks"""
-    
+
     # Create a task list
     create_task_list_query = """
     mutation {
@@ -294,17 +294,17 @@ async def test_graphql_tasks_get_all(test_client):
         }
     }
     """
-    
+
     task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
     task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
-    
+
     # Create multiple tasks
     tasks_data = [
         {"title": "First Task", "status": "PENDING", "priority": "HIGH"},
         {"title": "Second Task", "status": "IN_PROGRESS", "priority": "MEDIUM"},
-        {"title": "Third Task", "status": "COMPLETED", "priority": "LOW"}
+        {"title": "Third Task", "status": "COMPLETED", "priority": "LOW"},
     ]
-    
+
     created_ids = []
     for task_data in tasks_data:
         create_task_query = f"""
@@ -319,11 +319,11 @@ async def test_graphql_tasks_get_all(test_client):
             }}
         }}
         """
-        
+
         create_response = await test_client.post("/graphql", json={"query": create_task_query})
         assert create_response.status_code == 200
         created_ids.append(create_response.json()["data"]["createTask"]["id"])
-    
+
     # Query all tasks
     get_all_query = """
     query {
@@ -336,22 +336,22 @@ async def test_graphql_tasks_get_all(test_client):
         }
     }
     """
-    
+
     response = await test_client.post("/graphql", json={"query": get_all_query})
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     assert "errors" not in data
     assert "data" in data
     assert data["data"]["tasks"] is not None
 
     returned_ids = [task["id"] for task in data["data"]["tasks"]]
     returned_titles = [task["title"] for task in data["data"]["tasks"]]
-    
+
     for created_id in created_ids:
         assert created_id in returned_ids
-    
+
     assert "First Task" in returned_titles
     assert "Second Task" in returned_titles
     assert "Third Task" in returned_titles
@@ -360,7 +360,7 @@ async def test_graphql_tasks_get_all(test_client):
 @pytest.mark.asyncio
 async def test_graphql_tasks_empty_result(test_client):
     """Test getting tasks when there might be none (edge case)"""
-    
+
     # Query all tasks without creating any new ones
     get_all_query = """
     query {
@@ -370,12 +370,12 @@ async def test_graphql_tasks_empty_result(test_client):
         }
     }
     """
-    
+
     response = await test_client.post("/graphql", json={"query": get_all_query})
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     assert "errors" not in data
     assert "data" in data
     assert data["data"]["tasks"] is not None

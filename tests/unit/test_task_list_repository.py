@@ -1,12 +1,14 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from sqlalchemy.exc import IntegrityError
+
 from src.domain.entities.task_list import TaskList
 from src.domain.exceptions.task_list_exceptions import TaskListHasTasksException
+from src.infrastructure.database.models.task_list_model import TaskListModel
 from src.infrastructure.repositories.sqlalchemy_task_list_repository import (
     SQLAlchemyTaskListRepository,
 )
-from src.infrastructure.database.models.task_list_model import TaskListModel
 
 
 @pytest.fixture
@@ -21,23 +23,17 @@ def repository(mock_session):
 
 @pytest.fixture
 def sample_task_list():
-    return TaskList(
-        id=1, title="Test List", user_id=123, description="Test description"
-    )
+    return TaskList(id=1, title="Test List", user_id=123, description="Test description")
 
 
 @pytest.fixture
 def sample_task_list_model():
-    return TaskListModel(
-        id=1, title="Test List", user_id=123, description="Test description"
-    )
+    return TaskListModel(id=1, title="Test List", user_id=123, description="Test description")
 
 
 class TestSQLAlchemyTaskListRepository:
     @pytest.mark.asyncio
-    async def test_create_task_list(
-        self, repository, mock_session, sample_task_list, sample_task_list_model
-    ):
+    async def test_create_task_list(self, repository, mock_session, sample_task_list, sample_task_list_model):
         mock_session.commit = AsyncMock()
         mock_session.refresh = AsyncMock()
         mock_session.add = MagicMock()
@@ -50,9 +46,7 @@ class TestSQLAlchemyTaskListRepository:
         assert result.user_id == sample_task_list.user_id
 
     @pytest.mark.asyncio
-    async def test_get_by_id_found(
-        self, repository, mock_session, sample_task_list_model
-    ):
+    async def test_get_by_id_found(self, repository, mock_session, sample_task_list_model):
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = sample_task_list_model
         mock_session.execute = AsyncMock(return_value=mock_result)
@@ -76,9 +70,7 @@ class TestSQLAlchemyTaskListRepository:
         mock_session.execute.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_update_task_list_success(
-        self, repository, mock_session, sample_task_list, sample_task_list_model
-    ):
+    async def test_update_task_list_success(self, repository, mock_session, sample_task_list, sample_task_list_model):
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = sample_task_list_model
         mock_session.execute = AsyncMock(return_value=mock_result)
@@ -92,9 +84,7 @@ class TestSQLAlchemyTaskListRepository:
         mock_session.refresh.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_update_task_list_not_found(
-        self, repository, mock_session, sample_task_list
-    ):
+    async def test_update_task_list_not_found(self, repository, mock_session, sample_task_list):
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute = AsyncMock(return_value=mock_result)
@@ -103,9 +93,7 @@ class TestSQLAlchemyTaskListRepository:
             await repository.update(sample_task_list)
 
     @pytest.mark.asyncio
-    async def test_delete_task_list_success(
-        self, repository, mock_session, sample_task_list_model
-    ):
+    async def test_delete_task_list_success(self, repository, mock_session, sample_task_list_model):
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = sample_task_list_model
         mock_session.execute = AsyncMock(return_value=mock_result)
@@ -129,16 +117,12 @@ class TestSQLAlchemyTaskListRepository:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_delete_task_list_with_foreign_key_constraint(
-        self, repository, mock_session, sample_task_list_model
-    ):
+    async def test_delete_task_list_with_foreign_key_constraint(self, repository, mock_session, sample_task_list_model):
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = sample_task_list_model
         mock_session.execute = AsyncMock(return_value=mock_result)
         mock_session.delete = AsyncMock()
-        mock_session.flush = AsyncMock(
-            side_effect=IntegrityError("", "", "foreign key constraint fails")
-        )
+        mock_session.flush = AsyncMock(side_effect=IntegrityError("", "", "foreign key constraint fails"))
         mock_session.rollback = AsyncMock()
 
         with pytest.raises(TaskListHasTasksException) as exc_info:
@@ -148,9 +132,7 @@ class TestSQLAlchemyTaskListRepository:
         mock_session.rollback.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_list_all_task_lists(
-        self, repository, mock_session, sample_task_list_model
-    ):
+    async def test_list_all_task_lists(self, repository, mock_session, sample_task_list_model):
         mock_result = MagicMock()
         mock_scalars = MagicMock()
         mock_scalars.all.return_value = [sample_task_list_model]

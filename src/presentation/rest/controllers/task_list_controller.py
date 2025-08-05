@@ -1,19 +1,21 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.domain.entities.task_list import TaskList
-from src.domain.entities.task import TaskStatus, TaskPriority
-from src.application.use_cases.task_list.task_list_service import TaskListService
+
 from src.application.use_cases.task.task_service import TaskService
+from src.application.use_cases.task_list.task_list_service import TaskListService
+from src.domain.entities.task import TaskPriority, TaskStatus
+from src.domain.entities.task_list import TaskList
 from src.infrastructure.database.connection import get_db_session
-from src.presentation.shared.dependencies.service_factory import ServiceFactory
 from src.presentation.rest.dtos.task_list_schemas import (
     TaskListCreateSchema,
-    TaskListUpdateSchema,
     TaskListResponseSchema,
+    TaskListUpdateSchema,
     TaskListWithTasksResponseSchema,
 )
 from src.presentation.rest.dtos.task_schemas import TaskResponseSchema
+from src.presentation.shared.dependencies.service_factory import ServiceFactory
 
 router = APIRouter(prefix="/task-lists", tags=["task-lists"])
 
@@ -51,10 +53,7 @@ async def get_task_list(
 ):
     result = await service.get(task_list_id)
     if not result:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Task list not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task list not found")
     return TaskListResponseSchema.model_validate(result)
 
 
@@ -81,10 +80,7 @@ async def update_task_list(
         result = await service.update(task_list_id, task_list)
         return TaskListResponseSchema.model_validate(result)
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.delete("/{task_list_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -94,10 +90,7 @@ async def delete_task_list(
 ):
     success = await service.delete(task_list_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Task list not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task list not found")
 
 
 @router.get("/{task_list_id}/tasks", response_model=TaskListWithTasksResponseSchema)
@@ -110,19 +103,16 @@ async def get_task_list_with_tasks(
     """Get a task list with its tasks, filtered by status and/or priority, including completion percentage."""
     try:
         result = await service.get_tasks_with_completion(task_list_id, status, priority)
-        
+
         # Create response combining task_list data with additional fields
         task_list_data = TaskListResponseSchema.model_validate(result.task_list).model_dump()
-        
+
         return TaskListWithTasksResponseSchema(
             **task_list_data,
             tasks=[TaskResponseSchema.model_validate(task) for task in result.tasks],
             completion_percentage=result.completion_percentage,
             total_tasks=result.total_tasks,
-            completed_tasks=result.completed_tasks
+            completed_tasks=result.completed_tasks,
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=404,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=404, detail=str(e))

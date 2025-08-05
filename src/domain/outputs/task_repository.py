@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from src.domain.entities.task import Task, TaskStatus, TaskPriority
+
+from src.domain.entities.task import Task, TaskPriority, TaskStatus
 
 
 class TaskRepository(ABC):

@@ -2,15 +2,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from strawberry.fastapi import GraphQLRouter
 
-from src.presentation.rest.controllers.task_list_controller import router as task_list_router
-from src.presentation.rest.controllers.task_controller import router as task_router
-from src.presentation.graphql.schema import schema
 from src.presentation.graphql.context import get_graphql_context
+from src.presentation.graphql.schema import schema
+from src.presentation.rest.controllers.task_controller import router as task_router
+from src.presentation.rest.controllers.task_list_controller import (
+    router as task_list_router,
+)
 
 app = FastAPI(
     title="Task Management API",
     description="API for managing task lists and tasks with dual controllers (REST + GraphQL)",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # CORS middleware
@@ -42,6 +44,8 @@ async def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

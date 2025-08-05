@@ -1,6 +1,8 @@
-from typing import Optional, List
+from typing import List, Optional
+
 from pydantic import BaseModel
-from src.domain.entities.task import Task, TaskStatus, TaskPriority
+
+from src.domain.entities.task import Task, TaskPriority, TaskStatus
 
 
 class TaskFiltersDTO(BaseModel):

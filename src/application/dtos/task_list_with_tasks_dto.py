@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import List
-from src.domain.entities.task_list import TaskList
+
 from src.domain.entities.task import Task
+from src.domain.entities.task_list import TaskList
 
 
 @dataclass

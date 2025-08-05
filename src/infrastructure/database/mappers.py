@@ -1,5 +1,5 @@
-from src.domain.entities.task_list import TaskList
 from src.domain.entities.task import Task
+from src.domain.entities.task_list import TaskList
 from src.infrastructure.database.models.task_list_model import TaskListModel
 from src.infrastructure.database.models.task_model import TaskModel
 
@@ -26,13 +26,13 @@ class TaskListMapper:
             "user_id": entity.user_id,
             "is_active": entity.is_active,
         }
-        
+
         # Only set timestamps if they exist
         if entity.created_at:
             model_data["created_at"] = entity.created_at
         if entity.updated_at:
             model_data["updated_at"] = entity.updated_at
-            
+
         return TaskListModel(**model_data)
 
 

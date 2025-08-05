@@ -1,8 +1,10 @@
-import pytest
 from unittest.mock import AsyncMock, Mock
-from src.domain.entities.task import Task, TaskStatus, TaskPriority
-from src.application.use_cases.task.task_service import TaskService
+
+import pytest
+
 from src.application.dtos.task_dto import TaskFiltersDTO
+from src.application.use_cases.task.task_service import TaskService
+from src.domain.entities.task import Task, TaskPriority, TaskStatus
 
 
 @pytest.fixture
@@ -46,9 +48,7 @@ class TestTaskService:
         mock_repository.get_by_id.assert_called_once_with(1)
 
     @pytest.mark.asyncio
-    async def test_change_status_success(
-        self, task_service, mock_repository, sample_task
-    ):
+    async def test_change_status_success(self, task_service, mock_repository, sample_task):
         updated_task = Task(
             id=1,
             title="Test Task",
@@ -82,14 +82,10 @@ class TestTaskService:
         result = await task_service.get_by_filters(filters)
 
         assert result == tasks
-        mock_repository.get_tasks_by_filters.assert_called_once_with(
-            123, TaskStatus.PENDING, None
-        )
+        mock_repository.get_tasks_by_filters.assert_called_once_with(123, TaskStatus.PENDING, None)
 
     @pytest.mark.asyncio
-    async def test_calculate_completion_percentage_with_tasks(
-        self, task_service, mock_repository
-    ):
+    async def test_calculate_completion_percentage_with_tasks(self, task_service, mock_repository):
         tasks = [
             Task(id=1, title="Task 1", task_list_id=123, status=TaskStatus.COMPLETED),
             Task(id=2, title="Task 2", task_list_id=123, status=TaskStatus.PENDING),
@@ -104,9 +100,7 @@ class TestTaskService:
         mock_repository.get_by_task_list_id.assert_called_once_with(123)
 
     @pytest.mark.asyncio
-    async def test_calculate_completion_percentage_no_tasks(
-        self, task_service, mock_repository
-    ):
+    async def test_calculate_completion_percentage_no_tasks(self, task_service, mock_repository):
         mock_repository.get_by_task_list_id = AsyncMock(return_value=[])
 
         result = await task_service.calculate_completion_percentage(123)

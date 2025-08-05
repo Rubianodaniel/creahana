@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
+
 from src.infrastructure.database.connection import Base
 from src.infrastructure.utils.datetime_utils import utc_now
 

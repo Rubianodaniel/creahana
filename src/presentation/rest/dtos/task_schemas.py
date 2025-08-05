@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, Field
-from src.domain.entities.task import TaskStatus, TaskPriority
+
+from src.domain.entities.task import TaskPriority, TaskStatus
 
 
 class TaskCreateSchema(BaseModel):
@@ -26,7 +28,7 @@ class TaskUpdateSchema(BaseModel):
 
 class TaskResponseSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     title: str
     description: Optional[str] = None

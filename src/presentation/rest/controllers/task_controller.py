@@ -1,17 +1,18 @@
 from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.application.use_cases.task.task_service import TaskService
 from src.domain.entities.task import Task
 from src.infrastructure.database.connection import get_db_session
 from src.presentation.rest.dtos.task_schemas import (
     TaskCreateSchema,
-    TaskUpdateSchema, 
-    TaskResponseSchema
+    TaskResponseSchema,
+    TaskUpdateSchema,
 )
 from src.presentation.rest.dtos.task_status_schemas import TaskStatusUpdateSchema
 from src.presentation.shared.dependencies.service_factory import ServiceFactory
-
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -34,7 +35,7 @@ async def create_task(
         status=task_data.status,
         priority=task_data.priority,
         assigned_user_id=task_data.assigned_user_id,
-        due_date=task_data.due_date
+        due_date=task_data.due_date,
     )
     result = await service.create(task)
     return TaskResponseSchema.model_validate(result)
@@ -47,10 +48,7 @@ async def get_task(
 ):
     result = await service.get(task_id)
     if not result:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Task not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
     return TaskResponseSchema.model_validate(result)
 
 
@@ -75,16 +73,13 @@ async def update_task(
         status=task_data.status,
         priority=task_data.priority,
         assigned_user_id=task_data.assigned_user_id,
-        due_date=task_data.due_date
+        due_date=task_data.due_date,
     )
     try:
         result = await service.update(task_id, task)
         return TaskResponseSchema.model_validate(result)
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -94,10 +89,7 @@ async def delete_task(
 ):
     success = await service.delete(task_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Task not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
 
 
 @router.patch("/{task_id}/status", response_model=TaskResponseSchema)
@@ -110,7 +102,4 @@ async def change_task_status(
         result = await service.change_status(task_id, status_data.status)
         return TaskResponseSchema.model_validate(result)
     except ValueError as e:
-        raise HTTPException(
-            status_code=404,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=404, detail=str(e))

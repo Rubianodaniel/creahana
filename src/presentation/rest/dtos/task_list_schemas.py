@@ -1,6 +1,8 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Optional
+
 from pydantic import BaseModel, ConfigDict, Field
+
 from src.presentation.rest.dtos.task_schemas import TaskResponseSchema
 
 
@@ -18,7 +20,7 @@ class TaskListUpdateSchema(BaseModel):
 
 class TaskListResponseSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     title: str
     description: Optional[str] = None

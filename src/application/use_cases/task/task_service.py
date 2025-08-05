@@ -1,8 +1,9 @@
 from typing import List, Optional
+
+from src.application.dtos.task_dto import TaskFiltersDTO
 from src.domain.entities.task import Task, TaskStatus
 from src.domain.inputs.task_use_cases import TaskUseCases
 from src.domain.outputs.task_repository import TaskRepository
-from src.application.dtos.task_dto import TaskFiltersDTO
 
 
 class TaskService(TaskUseCases):
@@ -20,7 +21,7 @@ class TaskService(TaskUseCases):
         current_task = await self.repository.get_by_id(task_id)
         if not current_task:
             raise ValueError("Task not found")
-        
+
         # Update only the fields that are provided (not None)
         updated_task = Task(
             id=task_id,
@@ -33,9 +34,9 @@ class TaskService(TaskUseCases):
             due_date=task.due_date if task.due_date is not None else current_task.due_date,
             is_active=current_task.is_active,
             created_at=current_task.created_at,
-            updated_at=current_task.updated_at
+            updated_at=current_task.updated_at,
         )
-        
+
         return await self.repository.update(updated_task)
 
     async def delete(self, task_id: int) -> bool:
@@ -53,16 +54,12 @@ class TaskService(TaskUseCases):
         return await self.repository.update(task)
 
     async def get_by_filters(self, filters: TaskFiltersDTO) -> List[Task]:
-        return await self.repository.get_tasks_by_filters(
-            filters.task_list_id, filters.status, filters.priority
-        )
+        return await self.repository.get_tasks_by_filters(filters.task_list_id, filters.status, filters.priority)
 
     async def calculate_completion_percentage(self, task_list_id: int) -> float:
         tasks = await self.repository.get_by_task_list_id(task_list_id)
         if not tasks:
             return 0.0
 
-        completed_tasks = [
-            task for task in tasks if task.status == TaskStatus.COMPLETED
-        ]
+        completed_tasks = [task for task in tasks if task.status == TaskStatus.COMPLETED]
         return (len(completed_tasks) / len(tasks)) * 100

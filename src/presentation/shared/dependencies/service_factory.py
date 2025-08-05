@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.application.use_cases.task_list.task_list_service import TaskListService
+
 from src.application.use_cases.task.task_service import TaskService
+from src.application.use_cases.task_list.task_list_service import TaskListService
 from src.infrastructure.repositories.sqlalchemy_task_list_repository import (
     SQLAlchemyTaskListRepository,
 )
