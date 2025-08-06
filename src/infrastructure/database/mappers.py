@@ -1,7 +1,9 @@
 from src.domain.entities.task import Task
 from src.domain.entities.task_list import TaskList
+from src.domain.entities.user import User
 from src.infrastructure.database.models.task_list_model import TaskListModel
 from src.infrastructure.database.models.task_model import TaskModel
+from src.infrastructure.database.models.user_model import UserModel
 
 
 class TaskListMapper:
@@ -34,6 +36,30 @@ class TaskListMapper:
             model_data["updated_at"] = entity.updated_at
 
         return TaskListModel(**model_data)
+
+
+def user_to_domain(model: UserModel) -> User:
+    return User(
+        id=model.id,
+        email=model.email,
+        username=model.username,
+        hashed_password=model.hashed_password,
+        is_active=model.is_active,
+        created_at=model.created_at,
+        updated_at=model.updated_at,
+    )
+
+
+def user_to_model(entity: User) -> UserModel:
+    return UserModel(
+        id=entity.id,
+        email=entity.email,
+        username=entity.username,
+        hashed_password=entity.hashed_password,
+        is_active=entity.is_active,
+        created_at=entity.created_at,
+        updated_at=entity.updated_at,
+    )
 
 
 class TaskMapper:

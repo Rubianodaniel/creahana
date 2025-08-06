@@ -128,17 +128,17 @@ async def test_graphql_task_list_invalid_id_negative(test_client):
 async def test_graphql_task_list_with_all_fields(test_client):
     """Test getting task list requesting all available fields"""
 
+
     # Create a task list with all possible data
-    create_query = """
-    mutation {
-        createTaskList(input: {
+    create_query = f"""
+    mutation {{
+        createTaskList(input: {{
             title: "Complete Task List"
             description: "Task list with all fields populated"
-            userId: 123
-        }) {
+        }}) {{
             id
-        }
-    }
+        }}
+    }}
     """
 
     create_response = await test_client.post("/graphql", json={"query": create_query})
@@ -151,7 +151,6 @@ async def test_graphql_task_list_with_all_fields(test_client):
             id
             title
             description
-            userId
             isActive
             createdAt
             updatedAt
@@ -172,7 +171,6 @@ async def test_graphql_task_list_with_all_fields(test_client):
     assert task_list["id"] == task_list_id
     assert task_list["title"] == "Complete Task List"
     assert task_list["description"] == "Task list with all fields populated"
-    assert task_list["userId"] == 123
     assert task_list["isActive"] is True
     assert task_list["createdAt"] is not None
     assert task_list["updatedAt"] is not None

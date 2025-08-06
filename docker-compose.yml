@@ -24,14 +24,13 @@ services:
       POSTGRES_PASSWORD: crehana_pass
     ports:
       - "5433:5432"
-    volumes:
-      - postgres_test_data:/var/lib/postgresql/data
+
     networks:
       - crehana_network
 
 volumes:
   postgres_data:
-  postgres_test_data:
+
 
 networks:
   crehana_network:

@@ -1,7 +1,6 @@
 from typing import List, Optional
 
 import strawberry
-
 from strawberry.types import Info
 
 from src.domain.entities.task import TaskPriority, TaskStatus

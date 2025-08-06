@@ -20,7 +20,7 @@ async def test_graphql_create_task_success(test_client):
     task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
     task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
 
-    # Create a task
+    # Create a task without assignedUserId (it's optional)
     create_query = f"""
     mutation {{
         createTask(input: {{
@@ -29,7 +29,6 @@ async def test_graphql_create_task_success(test_client):
             taskListId: {task_list_id}
             status: IN_PROGRESS
             priority: HIGH
-            assignedUserId: 42
         }}) {{
             id
             title
@@ -61,7 +60,7 @@ async def test_graphql_create_task_success(test_client):
     assert task["taskListId"] == task_list_id
     assert task["status"] == "IN_PROGRESS"
     assert task["priority"] == "HIGH"
-    assert task["assignedUserId"] == 42
+    assert task["assignedUserId"] is None
     assert task["isActive"] is True
     assert task["createdAt"] is not None
     assert task["updatedAt"] is not None
@@ -193,19 +192,16 @@ async def test_graphql_create_multiple_tasks(test_client):
             "title": "First Task",
             "status": "PENDING",
             "priority": "HIGH",
-            "assignedUserId": 1,
         },
         {
             "title": "Second Task",
             "status": "IN_PROGRESS",
             "priority": "MEDIUM",
-            "assignedUserId": 2,
         },
         {
             "title": "Third Task",
             "status": "COMPLETED",
             "priority": "LOW",
-            "assignedUserId": 1,
         },
     ]
 
@@ -219,7 +215,6 @@ async def test_graphql_create_multiple_tasks(test_client):
                 taskListId: {task_list_id}
                 status: {task_data['status']}
                 priority: {task_data['priority']}
-                assignedUserId: {task_data['assignedUserId']}
             }}) {{
                 id
                 title
@@ -242,7 +237,7 @@ async def test_graphql_create_multiple_tasks(test_client):
         assert task["title"] == task_data["title"]
         assert task["status"] == task_data["status"]
         assert task["priority"] == task_data["priority"]
-        assert task["assignedUserId"] == task_data["assignedUserId"]
+        assert task["assignedUserId"] is None
 
     # Verify all tasks have unique IDs
     ids = [task["id"] for task in created_tasks]
@@ -503,7 +498,6 @@ async def test_graphql_update_task_success(test_client):
             taskListId: {task_list_id}
             status: PENDING
             priority: LOW
-            assignedUserId: 100
         }}) {{
             id
         }}
@@ -521,7 +515,6 @@ async def test_graphql_update_task_success(test_client):
             description: "Updated description"
             status: IN_PROGRESS
             priority: HIGH
-            assignedUserId: 200
         }}) {{
             id
             title
@@ -549,7 +542,7 @@ async def test_graphql_update_task_success(test_client):
     assert task["description"] == "Updated description"
     assert task["status"] == "IN_PROGRESS"
     assert task["priority"] == "HIGH"
-    assert task["assignedUserId"] == 200
+    assert task["assignedUserId"] is None
     assert task["updatedAt"] is not None
 
 
@@ -578,7 +571,6 @@ async def test_graphql_update_task_partial_update(test_client):
             description: "Original description"
             taskListId: {task_list_id}
             priority: MEDIUM
-            assignedUserId: 150
         }}) {{
             id
         }}

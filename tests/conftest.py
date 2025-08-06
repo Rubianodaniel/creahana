@@ -20,12 +20,16 @@ def setup_test_database():
     if not test_db_url:
         raise ValueError("La variable de entorno TEST_DATABASE_URL no está configurada")
 
-    sync_url = test_db_url.replace("postgresql+asyncpg://", "postgresql://")
-
+    # Configurar Alembic para usar la base de datos de test (convertir a sync para migraciones)
+    sync_test_db_url = test_db_url.replace("postgresql+asyncpg://", "postgresql://")
     alembic_cfg = Config("alembic.ini")
-    alembic_cfg.set_main_option("sqlalchemy.url", sync_url)
-
+    alembic_cfg.set_main_option("sqlalchemy.url", sync_test_db_url)
+    
+    # Aplicar migraciones
+    print(f"Aplicando migraciones a: {test_db_url}")
     command.upgrade(alembic_cfg, "head")
+    print("Migraciones aplicadas exitosamente")
+    
     yield
 
 

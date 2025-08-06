@@ -8,6 +8,7 @@ from src.presentation.rest.controllers.task_controller import router as task_rou
 from src.presentation.rest.controllers.task_list_controller import (
     router as task_list_router,
 )
+from src.presentation.rest.controllers.user_controller import router as user_router
 
 app = FastAPI(
     title="Task Management API",
@@ -27,6 +28,7 @@ app.add_middleware(
 # Include REST routers
 app.include_router(task_list_router, prefix="/api")
 app.include_router(task_router, prefix="/api")
+app.include_router(user_router, prefix="/api")
 
 # Include GraphQL router
 graphql_app = GraphQLRouter(schema, context_getter=get_graphql_context)

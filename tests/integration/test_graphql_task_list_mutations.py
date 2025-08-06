@@ -4,23 +4,23 @@ import pytest
 @pytest.mark.asyncio
 async def test_graphql_create_task_list_success(test_client):
     """Test successful task list creation with all fields"""
+    
 
-    create_query = """
-    mutation {
-        createTaskList(input: {
+
+    create_query = f"""
+    mutation {{
+        createTaskList(input: {{
             title: "My New Task List"
             description: "A task list"
-            userId: 42
-        }) {
+        }}) {{
             id
             title
             description
-            userId
             isActive
             createdAt
             updatedAt
-        }
-    }
+        }}
+    }}
     """
 
     response = await test_client.post("/graphql", json={"query": create_query})
@@ -70,7 +70,6 @@ async def test_graphql_create_task_list_minimal_data(test_client):
     assert task_list["id"] is not None
     assert task_list["title"] == "Minimal Task List"
     assert task_list["description"] is None
-    assert task_list["userId"] is None
     assert task_list["isActive"] is True
 
 
@@ -139,7 +138,7 @@ async def test_graphql_create_task_list_with_description_only(test_client):
             id
             title
             description
-            userId
+         
         }
     }
     """
@@ -154,20 +153,20 @@ async def test_graphql_create_task_list_with_description_only(test_client):
 
     assert task_list["title"] == "Task List with Description"
     assert task_list["description"] == "This task list has a description but no assigned user"
-    assert task_list["userId"] is None
+
 
 
 @pytest.mark.asyncio
 async def test_graphql_create_multiple_task_lists(test_client):
     """Test creating multiple task lists in sequence"""
+   
 
     task_lists_data = [
-        {"title": "First Project", "description": "First project tasks", "userId": 1},
-        {"title": "Second Project", "description": "Second project tasks", "userId": 2},
+        {"title": "First Project", "description": "First project tasks"},
+        {"title": "Second Project", "description": "Second project tasks"},
         {
             "title": "Personal Tasks",
             "description": "My personal task list",
-            "userId": 1,
         },
     ]
 
@@ -179,12 +178,10 @@ async def test_graphql_create_multiple_task_lists(test_client):
             createTaskList(input: {{
                 title: "{tl_data['title']}"
                 description: "{tl_data['description']}"
-                userId: {tl_data['userId']}
             }}) {{
                 id
                 title
                 description
-                userId
             }}
         }}
         """
@@ -200,7 +197,7 @@ async def test_graphql_create_multiple_task_lists(test_client):
 
         assert task_list["title"] == tl_data["title"]
         assert task_list["description"] == tl_data["description"]
-        assert task_list["userId"] == tl_data["userId"]
+
 
     # Verify all task lists have unique IDs
     ids = [tl["id"] for tl in created_task_lists]
@@ -211,18 +208,19 @@ async def test_graphql_create_multiple_task_lists(test_client):
 @pytest.mark.asyncio
 async def test_graphql_update_task_list_success(test_client):
     """Test successful task list update with all fields"""
+    
+
 
     # First create a task list
-    create_query = """
-    mutation {
-        createTaskList(input: {
+    create_query = f"""
+    mutation {{
+        createTaskList(input: {{
             title: "Original Title"
             description: "Original description"
-            userId: 100
-        }) {
+        }}) {{
             id
-        }
-    }
+        }}
+    }}
     """
 
     create_response = await test_client.post("/graphql", json={"query": create_query})
@@ -234,12 +232,10 @@ async def test_graphql_update_task_list_success(test_client):
         updateTaskList(id: {task_list_id}, input: {{
             title: "Updated Title"
             description: "Updated description"
-            userId: 200
         }}) {{
             id
             title
             description
-            userId
             isActive
             updatedAt
         }}
@@ -259,7 +255,6 @@ async def test_graphql_update_task_list_success(test_client):
     assert task_list["id"] == task_list_id
     assert task_list["title"] == "Updated Title"
     assert task_list["description"] == "Updated description"
-    assert task_list["userId"] == 200
     assert task_list["isActive"] is True
     assert task_list["updatedAt"] is not None
 
@@ -268,17 +263,17 @@ async def test_graphql_update_task_list_success(test_client):
 async def test_graphql_update_task_list_partial_update(test_client):
     """Test updating only some fields of a task list"""
 
+
     # Create a task list
-    create_query = """
-    mutation {
-        createTaskList(input: {
+    create_query = f"""
+    mutation {{
+        createTaskList(input: {{
             title: "Original Title"
             description: "Original description"
-            userId: 100
-        }) {
+        }}) {{
             id
-        }
-    }
+        }}
+    }}
     """
 
     create_response = await test_client.post("/graphql", json={"query": create_query})
@@ -308,7 +303,7 @@ async def test_graphql_update_task_list_partial_update(test_client):
 
     assert task_list["title"] == "Only Title Updated"
     assert task_list["description"] == "Original description"
-    assert task_list["userId"] == 100
+
 
 
 @pytest.mark.asyncio

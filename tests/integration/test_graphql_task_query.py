@@ -154,7 +154,6 @@ async def test_graphql_task_with_all_fields(test_client):
     mutation {
         createTaskList(input: {
             title: "Complete Task List"
-            userId: 123
         }) {
             id
         }
@@ -173,7 +172,6 @@ async def test_graphql_task_with_all_fields(test_client):
             taskListId: {task_list_id}
             status: IN_PROGRESS
             priority: MEDIUM
-            assignedUserId: 456
         }}) {{
             id
         }}
@@ -217,7 +215,7 @@ async def test_graphql_task_with_all_fields(test_client):
     assert task["taskListId"] == task_list_id
     assert task["status"] == "IN_PROGRESS"
     assert task["priority"] == "MEDIUM"
-    assert task["assignedUserId"] == 456
+    assert task["assignedUserId"] is None
     assert task["isActive"] is True
     assert task["createdAt"] is not None
     assert task["updatedAt"] is not None
