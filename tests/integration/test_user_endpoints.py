@@ -1,5 +1,7 @@
 import pytest
 
+from tests.helpers.auth_helper import create_test_user_and_get_headers
+
 
 @pytest.mark.asyncio
 async def test_create_user_simple(test_client):
@@ -22,13 +24,16 @@ async def test_create_user_simple(test_client):
 @pytest.mark.asyncio
 async def test_get_user_simple(test_client):
     """Test basic user retrieval."""
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 1)
+    
     # Create user first
     user_data = {"email": "get@example.com", "username": "getuser"}
     create_response = await test_client.post("/api/users/", json=user_data)
     user_id = create_response.json()["id"]
     
     # Get the user
-    response = await test_client.get(f"/api/users/{user_id}")
+    response = await test_client.get(f"/api/users/{user_id}", headers=auth_headers)
     
     assert response.status_code == 200
     data = response.json()

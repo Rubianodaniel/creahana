@@ -1,11 +1,16 @@
 import pytest
 
+from tests.helpers.auth_helper import create_test_user_and_get_headers
+
 
 @pytest.mark.asyncio
 async def test_get_task_list_with_tasks_no_filters(test_client):
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 1)
+    
     task_list_data = {"title": "Test Task List", "description": "Test description"}
 
-    create_response = await test_client.post("/api/task-lists/", json=task_list_data)
+    create_response = await test_client.post("/api/task-lists/", json=task_list_data, headers=auth_headers)
     assert create_response.status_code == 201
     task_list_id = create_response.json()["id"]
 
@@ -35,10 +40,10 @@ async def test_get_task_list_with_tasks_no_filters(test_client):
     ]
 
     for task_data in tasks_data:
-        task_response = await test_client.post("/api/tasks/", json=task_data)
+        task_response = await test_client.post("/api/tasks/", json=task_data, headers=auth_headers)
         assert task_response.status_code == 201
 
-    response = await test_client.get(f"/api/task-lists/{task_list_id}/tasks")
+    response = await test_client.get(f"/api/task-lists/{task_list_id}/tasks", headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -58,14 +63,17 @@ async def test_get_task_list_with_tasks_no_filters(test_client):
 
 @pytest.mark.asyncio
 async def test_get_task_list_by_id(test_client):
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 2)
+    
     task_list_data = {"title": "Test Task List", "description": "Test description"}
 
-    create_response = await test_client.post("/api/task-lists/", json=task_list_data)
+    create_response = await test_client.post("/api/task-lists/", json=task_list_data, headers=auth_headers)
     assert create_response.status_code == 201
     created_data = create_response.json()
     task_list_id = created_data["id"]
 
-    get_response = await test_client.get(f"/api/task-lists/{task_list_id}")
+    get_response = await test_client.get(f"/api/task-lists/{task_list_id}", headers=auth_headers)
 
     assert get_response.status_code == 200
     data = get_response.json()
@@ -78,13 +86,19 @@ async def test_get_task_list_by_id(test_client):
 
 @pytest.mark.asyncio
 async def test_get_task_list_not_found(test_client):
-    response = await test_client.get("/api/task-lists/999")
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 3)
+    
+    response = await test_client.get("/api/task-lists/999", headers=auth_headers)
 
     assert response.status_code == 404
 
 
 @pytest.mark.asyncio
 async def test_get_all_task_lists(test_client):
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 4)
+    
     task_lists = [
         {"title": "List 1", "description": "Description 1"},
         {"title": "List 2", "description": "Description 2"},
@@ -93,11 +107,11 @@ async def test_get_all_task_lists(test_client):
 
     created_ids = []
     for task_list_data in task_lists:
-        response = await test_client.post("/api/task-lists/", json=task_list_data)
+        response = await test_client.post("/api/task-lists/", json=task_list_data, headers=auth_headers)
         assert response.status_code == 201
         created_ids.append(response.json()["id"])
 
-    get_all_response = await test_client.get("/api/task-lists/")
+    get_all_response = await test_client.get("/api/task-lists/", headers=auth_headers)
 
     assert get_all_response.status_code == 200
     data = get_all_response.json()
@@ -113,9 +127,12 @@ async def test_get_all_task_lists(test_client):
 
 @pytest.mark.asyncio
 async def test_get_task_list_with_tasks_filter_by_status(test_client):
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 5)
+    
     task_list_data = {"title": "Test Task List", "description": "Test description"}
 
-    create_response = await test_client.post("/api/task-lists/", json=task_list_data)
+    create_response = await test_client.post("/api/task-lists/", json=task_list_data, headers=auth_headers)
     assert create_response.status_code == 201
     task_list_id = create_response.json()["id"]
 
@@ -136,10 +153,10 @@ async def test_get_task_list_with_tasks_filter_by_status(test_client):
     ]
 
     for task_data in tasks_data:
-        task_response = await test_client.post("/api/tasks/", json=task_data)
+        task_response = await test_client.post("/api/tasks/", json=task_data, headers=auth_headers)
         assert task_response.status_code == 201
 
-    response = await test_client.get(f"/api/task-lists/{task_list_id}/tasks?status=pending")
+    response = await test_client.get(f"/api/task-lists/{task_list_id}/tasks?status=pending", headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -154,9 +171,12 @@ async def test_get_task_list_with_tasks_filter_by_status(test_client):
 
 @pytest.mark.asyncio
 async def test_get_task_list_with_tasks_filter_by_priority(test_client):
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 6)
+    
     task_list_data = {"title": "Test Task List", "description": "Test description"}
 
-    create_response = await test_client.post("/api/task-lists/", json=task_list_data)
+    create_response = await test_client.post("/api/task-lists/", json=task_list_data, headers=auth_headers)
     assert create_response.status_code == 201
     task_list_id = create_response.json()["id"]
 
@@ -177,10 +197,10 @@ async def test_get_task_list_with_tasks_filter_by_priority(test_client):
     ]
 
     for task_data in tasks_data:
-        task_response = await test_client.post("/api/tasks/", json=task_data)
+        task_response = await test_client.post("/api/tasks/", json=task_data, headers=auth_headers)
         assert task_response.status_code == 201
 
-    response = await test_client.get(f"/api/task-lists/{task_list_id}/tasks?priority=high")
+    response = await test_client.get(f"/api/task-lists/{task_list_id}/tasks?priority=high", headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -195,7 +215,10 @@ async def test_get_task_list_with_tasks_filter_by_priority(test_client):
 
 @pytest.mark.asyncio
 async def test_get_task_list_with_tasks_not_found(test_client):
-    response = await test_client.get("/api/task-lists/99999/tasks")
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 7)
+    
+    response = await test_client.get("/api/task-lists/99999/tasks", headers=auth_headers)
 
     assert response.status_code == 404
     assert "Task list not found" in response.json()["detail"]
@@ -203,13 +226,16 @@ async def test_get_task_list_with_tasks_not_found(test_client):
 
 @pytest.mark.asyncio
 async def test_get_task_list_with_tasks_no_tasks(test_client):
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 8)
+    
     task_list_data = {"title": "Empty Task List", "description": "No tasks here"}
 
-    create_response = await test_client.post("/api/task-lists/", json=task_list_data)
+    create_response = await test_client.post("/api/task-lists/", json=task_list_data, headers=auth_headers)
     assert create_response.status_code == 201
     task_list_id = create_response.json()["id"]
 
-    response = await test_client.get(f"/api/task-lists/{task_list_id}/tasks")
+    response = await test_client.get(f"/api/task-lists/{task_list_id}/tasks", headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()

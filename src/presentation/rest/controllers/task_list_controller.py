@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Annotated, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,7 +7,9 @@ from src.application.use_cases.task.task_service import TaskService
 from src.application.use_cases.task_list.task_list_service import TaskListService
 from src.domain.entities.task import TaskPriority, TaskStatus
 from src.domain.entities.task_list import TaskList
+from src.domain.entities.user import User
 from src.infrastructure.database.connection import get_db_session
+from src.presentation.rest.middleware.auth_middleware import get_current_user
 from src.presentation.rest.dtos.task_list_schemas import (
     TaskListCreateSchema,
     TaskListResponseSchema,
@@ -35,6 +37,7 @@ async def get_task_service(
 @router.post("/", response_model=TaskListResponseSchema, status_code=status.HTTP_201_CREATED)
 async def create_task_list(
     task_list_data: TaskListCreateSchema,
+    current_user: Annotated[User, Depends(get_current_user)],
     service: TaskListService = Depends(get_task_list_service),
 ):
     task_list = TaskList(
@@ -49,6 +52,7 @@ async def create_task_list(
 @router.get("/{task_list_id}", response_model=TaskListResponseSchema)
 async def get_task_list(
     task_list_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
     service: TaskListService = Depends(get_task_list_service),
 ):
     result = await service.get(task_list_id)
@@ -59,6 +63,7 @@ async def get_task_list(
 
 @router.get("/", response_model=List[TaskListResponseSchema])
 async def list_task_lists(
+    current_user: Annotated[User, Depends(get_current_user)],
     service: TaskListService = Depends(get_task_list_service),
 ):
     results = await service.list_all()
@@ -69,6 +74,7 @@ async def list_task_lists(
 async def update_task_list(
     task_list_id: int,
     task_list_data: TaskListUpdateSchema,
+    current_user: Annotated[User, Depends(get_current_user)],
     service: TaskListService = Depends(get_task_list_service),
 ):
     task_list = TaskList(
@@ -86,6 +92,7 @@ async def update_task_list(
 @router.delete("/{task_list_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task_list(
     task_list_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
     service: TaskListService = Depends(get_task_list_service),
 ):
     success = await service.delete(task_list_id)
@@ -96,9 +103,10 @@ async def delete_task_list(
 @router.get("/{task_list_id}/tasks", response_model=TaskListWithTasksResponseSchema)
 async def get_task_list_with_tasks(
     task_list_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
+    service: TaskListService = Depends(get_task_list_service),
     status: Optional[TaskStatus] = Query(None, description="Filter by task status"),
     priority: Optional[TaskPriority] = Query(None, description="Filter by task priority"),
-    service: TaskListService = Depends(get_task_list_service),
 ):
     """Get a task list with its tasks, filtered by status and/or priority, including completion percentage."""
     try:

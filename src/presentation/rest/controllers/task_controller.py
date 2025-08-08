@@ -1,12 +1,14 @@
-from typing import List
+from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.use_cases.task.task_service import TaskService
 from src.domain.entities.task import Task
+from src.domain.entities.user import User
 from src.domain.exceptions.task_exceptions import InvalidTaskListException, InvalidUserException
 from src.infrastructure.database.connection import get_db_session
+from src.presentation.rest.middleware.auth_middleware import get_current_user
 from src.presentation.rest.dtos.task_schemas import (
     TaskCreateSchema,
     TaskResponseSchema,
@@ -27,6 +29,7 @@ async def get_task_service(
 @router.post("/", response_model=TaskResponseSchema, status_code=status.HTTP_201_CREATED)
 async def create_task(
     task_data: TaskCreateSchema,
+    current_user: Annotated[User, Depends(get_current_user)],
     service: TaskService = Depends(get_task_service),
 ):
     task = Task(
@@ -70,6 +73,7 @@ async def list_tasks(
 async def update_task(
     task_id: int,
     task_data: TaskUpdateSchema,
+    current_user: Annotated[User, Depends(get_current_user)],
     service: TaskService = Depends(get_task_service),
 ):
     task = Task(
@@ -95,6 +99,7 @@ async def update_task(
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task(
     task_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
     service: TaskService = Depends(get_task_service),
 ):
     success = await service.delete(task_id)
@@ -106,6 +111,7 @@ async def delete_task(
 async def change_task_status(
     task_id: int,
     status_data: TaskStatusUpdateSchema,
+    current_user: Annotated[User, Depends(get_current_user)],
     service: TaskService = Depends(get_task_service),
 ):
     try:

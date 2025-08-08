@@ -23,8 +23,7 @@ class SQLAlchemyUserRepository(UserRepository):
             await self.session.refresh(user_model)
             return user_to_domain(user_model)
         except IntegrityError as e:
-            await self.session.rollback()
-            # Check for specific constraint violations
+            # No hacer rollback aquí - solo lanzar la excepción apropiada
             error_msg = str(e).lower()
             if "email" in error_msg and ("unique" in error_msg or "duplicate" in error_msg):
                 raise DuplicateEmailException(user.email)
@@ -35,5 +34,10 @@ class SQLAlchemyUserRepository(UserRepository):
 
     async def get(self, user_id: int) -> Optional[User]:
         result = await self.session.execute(select(UserModel).where(UserModel.id == user_id))
+        user_model = result.scalar_one_or_none()
+        return user_to_domain(user_model) if user_model else None
+
+    async def get_by_email(self, email: str) -> Optional[User]:
+        result = await self.session.execute(select(UserModel).where(UserModel.email == email))
         user_model = result.scalar_one_or_none()
         return user_to_domain(user_model) if user_model else None

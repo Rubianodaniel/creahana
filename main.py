@@ -4,6 +4,7 @@ from strawberry.fastapi import GraphQLRouter
 
 from src.presentation.graphql.context import get_graphql_context
 from src.presentation.graphql.schema import schema
+from src.presentation.rest.controllers.auth_controller import router as auth_router
 from src.presentation.rest.controllers.task_controller import router as task_router
 from src.presentation.rest.controllers.task_list_controller import (
     router as task_list_router,
@@ -26,6 +27,7 @@ app.add_middleware(
 )
 
 # Include REST routers
+app.include_router(auth_router, prefix="/api")
 app.include_router(task_list_router, prefix="/api")
 app.include_router(task_router, prefix="/api")
 app.include_router(user_router, prefix="/api")

@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -5,6 +7,7 @@ from src.application.use_cases.user.user_service import UserService
 from src.domain.entities.user import User
 from src.domain.exceptions.user_exceptions import DuplicateEmailException, DuplicateUsernameException
 from src.infrastructure.database.connection import get_db_session
+from src.presentation.rest.middleware.auth_middleware import get_current_user
 from src.presentation.rest.dtos.user_schemas import UserCreateSchema, UserResponseSchema
 from src.presentation.shared.dependencies.service_factory import ServiceFactory
 
@@ -44,6 +47,7 @@ async def create_user(
 @router.get("/{user_id}", response_model=UserResponseSchema)
 async def get_user(
     user_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
     service: UserService = Depends(get_user_service),
 ):
     result = await service.get(user_id)

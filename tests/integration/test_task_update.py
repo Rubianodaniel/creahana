@@ -1,13 +1,18 @@
 import pytest
 
+from tests.helpers.auth_helper import create_test_user_and_get_headers
+
 
 @pytest.mark.asyncio
 async def test_update_task_success(test_client):
     """Test updating a task successfully."""
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 1)
+    
     # First create a task list
     task_list_data = {"title": "Parent Task List", "description": "List for tasks"}
 
-    list_response = await test_client.post("/api/task-lists/", json=task_list_data)
+    list_response = await test_client.post("/api/task-lists/", json=task_list_data, headers=auth_headers)
     assert list_response.status_code == 201
     task_list_id = list_response.json()["id"]
 
@@ -20,7 +25,7 @@ async def test_update_task_success(test_client):
         "priority": "low",
     }
 
-    create_response = await test_client.post("/api/tasks/", json=task_data)
+    create_response = await test_client.post("/api/tasks/", json=task_data, headers=auth_headers)
     assert create_response.status_code == 201
     task_id = create_response.json()["id"]
 
@@ -32,7 +37,7 @@ async def test_update_task_success(test_client):
         "priority": "high",
     }
 
-    update_response = await test_client.put(f"/api/tasks/{task_id}", json=update_data)
+    update_response = await test_client.put(f"/api/tasks/{task_id}", json=update_data, headers=auth_headers)
 
     assert update_response.status_code == 200
     data = update_response.json()
@@ -48,10 +53,13 @@ async def test_update_task_success(test_client):
 @pytest.mark.asyncio
 async def test_update_task_partial_update(test_client):
     """Test partially updating a task."""
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 2)
+    
     # First create a task list
     task_list_data = {"title": "Parent Task List", "description": "List for tasks"}
 
-    list_response = await test_client.post("/api/task-lists/", json=task_list_data)
+    list_response = await test_client.post("/api/task-lists/", json=task_list_data, headers=auth_headers)
     assert list_response.status_code == 201
     task_list_id = list_response.json()["id"]
 
@@ -64,14 +72,14 @@ async def test_update_task_partial_update(test_client):
         "priority": "medium",
     }
 
-    create_response = await test_client.post("/api/tasks/", json=task_data)
+    create_response = await test_client.post("/api/tasks/", json=task_data, headers=auth_headers)
     assert create_response.status_code == 201
     task_id = create_response.json()["id"]
 
     # Update only the status
     update_data = {"status": "completed"}
 
-    update_response = await test_client.put(f"/api/tasks/{task_id}", json=update_data)
+    update_response = await test_client.put(f"/api/tasks/{task_id}", json=update_data, headers=auth_headers)
 
     assert update_response.status_code == 200
     data = update_response.json()
@@ -86,9 +94,12 @@ async def test_update_task_partial_update(test_client):
 @pytest.mark.asyncio
 async def test_update_task_not_found(test_client):
     """Test updating a task that doesn't exist."""
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 3)
+    
     update_data = {"title": "Non-existent Task", "description": "This should fail"}
 
-    response = await test_client.put("/api/tasks/999", json=update_data)
+    response = await test_client.put("/api/tasks/999", json=update_data, headers=auth_headers)
 
     assert response.status_code == 404
 
@@ -96,16 +107,19 @@ async def test_update_task_not_found(test_client):
 @pytest.mark.asyncio
 async def test_update_task_change_task_list(test_client):
     """Test moving a task to a different task list."""
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 4)
+    
     # Create two task lists
     task_list_data_1 = {"title": "Task List 1", "description": "First list"}
 
-    list_response_1 = await test_client.post("/api/task-lists/", json=task_list_data_1)
+    list_response_1 = await test_client.post("/api/task-lists/", json=task_list_data_1, headers=auth_headers)
     assert list_response_1.status_code == 201
     task_list_id_1 = list_response_1.json()["id"]
 
     task_list_data_2 = {"title": "Task List 2", "description": "Second list"}
 
-    list_response_2 = await test_client.post("/api/task-lists/", json=task_list_data_2)
+    list_response_2 = await test_client.post("/api/task-lists/", json=task_list_data_2, headers=auth_headers)
     assert list_response_2.status_code == 201
     task_list_id_2 = list_response_2.json()["id"]
 
@@ -116,14 +130,14 @@ async def test_update_task_change_task_list(test_client):
         "task_list_id": task_list_id_1,
     }
 
-    create_response = await test_client.post("/api/tasks/", json=task_data)
+    create_response = await test_client.post("/api/tasks/", json=task_data, headers=auth_headers)
     assert create_response.status_code == 201
     task_id = create_response.json()["id"]
 
     # Move the task to the second list
     update_data = {"task_list_id": task_list_id_2}
 
-    update_response = await test_client.put(f"/api/tasks/{task_id}", json=update_data)
+    update_response = await test_client.put(f"/api/tasks/{task_id}", json=update_data, headers=auth_headers)
 
     assert update_response.status_code == 200
     data = update_response.json()
