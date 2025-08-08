@@ -19,8 +19,7 @@ async def get_auth_service(session: AsyncSession = Depends(get_db_session)) -> A
 
 
 async def get_current_user(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
-    auth_service: AuthService = Depends(get_auth_service)
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)], auth_service: AuthService = Depends(get_auth_service)
 ) -> User:
     """
     Get current authenticated user from JWT token.
@@ -29,18 +28,18 @@ async def get_current_user(
     """
     token = credentials.credentials
     user = await auth_service.verify_token(token)
-    
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User account is disabled",
         )
-    
+
     return user

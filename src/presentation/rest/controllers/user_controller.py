@@ -33,15 +33,9 @@ async def create_user(
         result = await service.create(user)
         return UserResponseSchema.model_validate(result)
     except DuplicateEmailException as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Email already exists: {e.email}"
-        )
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Email already exists: {e.email}")
     except DuplicateUsernameException as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Username already exists: {e.username}"
-        )
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Username already exists: {e.username}")
 
 
 @router.get("/{user_id}", response_model=UserResponseSchema)

@@ -51,18 +51,14 @@ class AuthService:
                 return None
         except JWTError:
             return None
-        
+
         user = await self.user_repository.get_by_email(email)
         return user
 
     async def register_user(self, email: str, username: str, password: str) -> User:
         """Register a new user with hashed password."""
         hashed_password = self.get_password_hash(password)
-        
-        user = User(
-            email=email,
-            username=username,
-            hashed_password=hashed_password
-        )
-        
+
+        user = User(email=email, username=username, hashed_password=hashed_password)
+
         return await self.user_repository.create(user)

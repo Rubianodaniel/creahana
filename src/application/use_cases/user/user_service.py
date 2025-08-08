@@ -1,7 +1,6 @@
 from typing import Optional
 
 from src.domain.entities.user import User
-from src.domain.exceptions.user_exceptions import DuplicateEmailException, DuplicateUsernameException
 from src.domain.repositories.user_repository import UserRepository
 
 

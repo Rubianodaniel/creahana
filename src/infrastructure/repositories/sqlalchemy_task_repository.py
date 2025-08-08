@@ -25,19 +25,19 @@ class SQLAlchemyTaskRepository(TaskRepository):
         except IntegrityError as e:
             # No hacer rollback aquí - solo lanzar la excepción apropiada
             error_message = str(e).lower()
-            
+
             # Check if it's a foreign key constraint error
             if "foreign key constraint" not in error_message and "violates foreign key" not in error_message:
                 raise e
-            
+
             # Handle specific foreign key violations
             if "task_list_id" in error_message or "task_lists" in error_message:
                 raise InvalidTaskListException(task.task_list_id)
-            
+
             if "assigned_user_id" in error_message or "users" in error_message:
                 if task.assigned_user_id:
                     raise InvalidUserException(task.assigned_user_id)
-            
+
             # Re-raise other integrity errors
             raise e
 
@@ -69,19 +69,19 @@ class SQLAlchemyTaskRepository(TaskRepository):
         except IntegrityError as e:
             # No hacer rollback aquí - solo lanzar la excepción apropiada
             error_message = str(e).lower()
-            
+
             # Check if it's a foreign key constraint error
             if "foreign key constraint" not in error_message and "violates foreign key" not in error_message:
                 raise e
-            
+
             # Handle specific foreign key violations
             if "task_list_id" in error_message or "task_lists" in error_message:
                 raise InvalidTaskListException(task.task_list_id)
-            
+
             if "assigned_user_id" in error_message or "users" in error_message:
                 if task.assigned_user_id:
                     raise InvalidUserException(task.assigned_user_id)
-            
+
             # Re-raise other integrity errors
             raise e
 
