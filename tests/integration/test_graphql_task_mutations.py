@@ -1,9 +1,15 @@
 import pytest
 
+from tests.helpers.auth_helper import create_test_user_and_get_headers
+
 
 @pytest.mark.asyncio
 async def test_graphql_create_task_success(test_client):
     """Test successful task creation with all fields"""
+
+    
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 1)
 
     # First create a task list
     create_task_list_query = """
@@ -17,7 +23,7 @@ async def test_graphql_create_task_success(test_client):
     }
     """
 
-    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
+    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query}, headers=auth_headers)
     task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
 
     # Create a task without assignedUserId (it's optional)
@@ -44,7 +50,7 @@ async def test_graphql_create_task_success(test_client):
     }}
     """
 
-    response = await test_client.post("/graphql", json={"query": create_query})
+    response = await test_client.post("/graphql", json={"query": create_query}, headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -70,6 +76,10 @@ async def test_graphql_create_task_success(test_client):
 async def test_graphql_create_task_minimal_data(test_client):
     """Test task creation with only required fields"""
 
+    
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 1)
+
     # Create a task list
     create_task_list_query = """
     mutation {
@@ -81,7 +91,7 @@ async def test_graphql_create_task_minimal_data(test_client):
     }
     """
 
-    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
+    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query}, headers=auth_headers)
     task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
 
     create_query = f"""
@@ -102,7 +112,7 @@ async def test_graphql_create_task_minimal_data(test_client):
     }}
     """
 
-    response = await test_client.post("/graphql", json={"query": create_query})
+    response = await test_client.post("/graphql", json={"query": create_query}, headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -124,6 +134,10 @@ async def test_graphql_create_task_minimal_data(test_client):
 async def test_graphql_create_task_with_description_only(test_client):
     """Test task creation with description but no assigned user"""
 
+    
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 1)
+
     # Create a task list
     create_task_list_query = """
     mutation {
@@ -135,7 +149,7 @@ async def test_graphql_create_task_with_description_only(test_client):
     }
     """
 
-    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
+    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query}, headers=auth_headers)
     task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
 
     create_query = f"""
@@ -155,7 +169,7 @@ async def test_graphql_create_task_with_description_only(test_client):
     }}
     """
 
-    response = await test_client.post("/graphql", json={"query": create_query})
+    response = await test_client.post("/graphql", json={"query": create_query}, headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -173,6 +187,10 @@ async def test_graphql_create_task_with_description_only(test_client):
 async def test_graphql_create_multiple_tasks(test_client):
     """Test creating multiple tasks in sequence"""
 
+    
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 1)
+
     # Create a task list
     create_task_list_query = """
     mutation {
@@ -184,7 +202,7 @@ async def test_graphql_create_multiple_tasks(test_client):
     }
     """
 
-    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
+    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query}, headers=auth_headers)
     task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
 
     tasks_data = [
@@ -225,7 +243,7 @@ async def test_graphql_create_multiple_tasks(test_client):
         }}
         """
 
-        response = await test_client.post("/graphql", json={"query": create_query})
+        response = await test_client.post("/graphql", json={"query": create_query}, headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -249,6 +267,10 @@ async def test_graphql_create_multiple_tasks(test_client):
 async def test_graphql_delete_task_success(test_client):
     """Test successful task deletion"""
 
+    
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 1)
+
     # Create task list and task
     create_task_list_query = """
     mutation {
@@ -260,7 +282,7 @@ async def test_graphql_delete_task_success(test_client):
     }
     """
 
-    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
+    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query}, headers=auth_headers)
     task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
 
     create_task_query = f"""
@@ -275,7 +297,7 @@ async def test_graphql_delete_task_success(test_client):
     }}
     """
 
-    create_response = await test_client.post("/graphql", json={"query": create_task_query})
+    create_response = await test_client.post("/graphql", json={"query": create_task_query}, headers=auth_headers)
     task_id = create_response.json()["data"]["createTask"]["id"]
 
     # Delete the task
@@ -285,7 +307,7 @@ async def test_graphql_delete_task_success(test_client):
     }}
     """
 
-    response = await test_client.post("/graphql", json={"query": delete_query})
+    response = await test_client.post("/graphql", json={"query": delete_query}, headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -304,7 +326,7 @@ async def test_graphql_delete_task_success(test_client):
     }}
     """
 
-    get_response = await test_client.post("/graphql", json={"query": get_query})
+    get_response = await test_client.post("/graphql", json={"query": get_query}, headers=auth_headers)
     get_data = get_response.json()
 
     assert get_data["data"]["task"] is None
@@ -314,13 +336,17 @@ async def test_graphql_delete_task_success(test_client):
 async def test_graphql_delete_task_nonexistent(test_client):
     """Test deleting a non-existent task returns false"""
 
+    
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 1)
+
     delete_query = """
     mutation {
         deleteTask(id: 99999)
     }
     """
 
-    response = await test_client.post("/graphql", json={"query": delete_query})
+    response = await test_client.post("/graphql", json={"query": delete_query}, headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -334,6 +360,10 @@ async def test_graphql_delete_task_nonexistent(test_client):
 async def test_graphql_change_task_status_success(test_client):
     """Test successful task status change"""
 
+    
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 1)
+
     # Create task list and task
     create_task_list_query = """
     mutation {
@@ -345,7 +375,7 @@ async def test_graphql_change_task_status_success(test_client):
     }
     """
 
-    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
+    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query}, headers=auth_headers)
     task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
 
     create_task_query = f"""
@@ -360,7 +390,7 @@ async def test_graphql_change_task_status_success(test_client):
     }}
     """
 
-    create_response = await test_client.post("/graphql", json={"query": create_task_query})
+    create_response = await test_client.post("/graphql", json={"query": create_task_query}, headers=auth_headers)
     task_id = create_response.json()["data"]["createTask"]["id"]
 
     # Change status to IN_PROGRESS
@@ -377,7 +407,7 @@ async def test_graphql_change_task_status_success(test_client):
     }}
     """
 
-    response = await test_client.post("/graphql", json={"query": change_status_query})
+    response = await test_client.post("/graphql", json={"query": change_status_query}, headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -397,6 +427,10 @@ async def test_graphql_change_task_status_success(test_client):
 async def test_graphql_change_task_status_to_completed(test_client):
     """Test changing task status to completed"""
 
+    
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 1)
+
     # Create task list and task
     create_task_list_query = """
     mutation {
@@ -408,7 +442,7 @@ async def test_graphql_change_task_status_to_completed(test_client):
     }
     """
 
-    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
+    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query}, headers=auth_headers)
     task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
 
     create_task_query = f"""
@@ -423,7 +457,7 @@ async def test_graphql_change_task_status_to_completed(test_client):
     }}
     """
 
-    create_response = await test_client.post("/graphql", json={"query": create_task_query})
+    create_response = await test_client.post("/graphql", json={"query": create_task_query}, headers=auth_headers)
     task_id = create_response.json()["data"]["createTask"]["id"]
 
     # Change status to COMPLETED
@@ -438,7 +472,7 @@ async def test_graphql_change_task_status_to_completed(test_client):
     }}
     """
 
-    response = await test_client.post("/graphql", json={"query": change_status_query})
+    response = await test_client.post("/graphql", json={"query": change_status_query}, headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -452,6 +486,10 @@ async def test_graphql_change_task_status_to_completed(test_client):
 async def test_graphql_change_task_status_nonexistent(test_client):
     """Test changing status of non-existent task returns null"""
 
+    
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 1)
+
     change_status_query = """
     mutation {
         changeTaskStatus(id: 99999, input: {
@@ -463,7 +501,7 @@ async def test_graphql_change_task_status_nonexistent(test_client):
     }
     """
 
-    response = await test_client.post("/graphql", json={"query": change_status_query})
+    response = await test_client.post("/graphql", json={"query": change_status_query}, headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -476,6 +514,10 @@ async def test_graphql_change_task_status_nonexistent(test_client):
 async def test_graphql_update_task_success(test_client):
     """Test successful task update with all fields"""
 
+    
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 1)
+
     # Create task list and task
     create_task_list_query = """
     mutation {
@@ -487,7 +529,7 @@ async def test_graphql_update_task_success(test_client):
     }
     """
 
-    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
+    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query}, headers=auth_headers)
     task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
 
     create_task_query = f"""
@@ -504,7 +546,7 @@ async def test_graphql_update_task_success(test_client):
     }}
     """
 
-    create_response = await test_client.post("/graphql", json={"query": create_task_query})
+    create_response = await test_client.post("/graphql", json={"query": create_task_query}, headers=auth_headers)
     task_id = create_response.json()["data"]["createTask"]["id"]
 
     # Update the task
@@ -527,7 +569,7 @@ async def test_graphql_update_task_success(test_client):
     }}
     """
 
-    response = await test_client.post("/graphql", json={"query": update_query})
+    response = await test_client.post("/graphql", json={"query": update_query}, headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -550,6 +592,10 @@ async def test_graphql_update_task_success(test_client):
 async def test_graphql_update_task_partial_update(test_client):
     """Test updating only some fields of a task"""
 
+    
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 1)
+
     # Create task list and task
     create_task_list_query = """
     mutation {
@@ -561,7 +607,7 @@ async def test_graphql_update_task_partial_update(test_client):
     }
     """
 
-    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query})
+    task_list_response = await test_client.post("/graphql", json={"query": create_task_list_query}, headers=auth_headers)
     task_list_id = task_list_response.json()["data"]["createTaskList"]["id"]
 
     create_task_query = f"""
@@ -577,7 +623,7 @@ async def test_graphql_update_task_partial_update(test_client):
     }}
     """
 
-    create_response = await test_client.post("/graphql", json={"query": create_task_query})
+    create_response = await test_client.post("/graphql", json={"query": create_task_query}, headers=auth_headers)
     task_id = create_response.json()["data"]["createTask"]["id"]
 
     # Update only the title and priority
@@ -597,7 +643,7 @@ async def test_graphql_update_task_partial_update(test_client):
     }}
     """
 
-    response = await test_client.post("/graphql", json={"query": update_query})
+    response = await test_client.post("/graphql", json={"query": update_query}, headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -613,6 +659,10 @@ async def test_graphql_update_task_partial_update(test_client):
 async def test_graphql_update_task_nonexistent(test_client):
     """Test updating a non-existent task returns null"""
 
+    
+    # Get auth headers
+    auth_headers = await create_test_user_and_get_headers(test_client, 1)
+
     update_query = """
     mutation {
         updateTask(id: 99999, input: {
@@ -624,7 +674,7 @@ async def test_graphql_update_task_nonexistent(test_client):
     }
     """
 
-    response = await test_client.post("/graphql", json={"query": update_query})
+    response = await test_client.post("/graphql", json={"query": update_query}, headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
