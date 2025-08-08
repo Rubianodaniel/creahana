@@ -20,7 +20,8 @@ class ServiceFactory:
     def create_task_list_service(session: AsyncSession) -> TaskListService:
         task_list_repository = SQLAlchemyTaskListRepository(session)
         task_repository = SQLAlchemyTaskRepository(session)
-        return TaskListService(task_list_repository, task_repository)
+        user_repository = SQLAlchemyUserRepository(session)
+        return TaskListService(task_list_repository, task_repository, user_repository)
 
     @staticmethod
     def create_task_service(session: AsyncSession) -> TaskService:

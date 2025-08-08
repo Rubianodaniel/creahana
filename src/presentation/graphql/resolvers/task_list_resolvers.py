@@ -5,7 +5,7 @@ from strawberry.types import Info
 
 from src.domain.entities.task import TaskPriority, TaskStatus
 from src.domain.entities.task_list import TaskList
-from src.domain.exceptions.task_list_exceptions import TaskListHasTasksException
+from src.domain.exceptions.task_list_exceptions import InvalidUserException, TaskListHasTasksException
 from src.presentation.graphql.context import GraphQLContext
 from src.presentation.graphql.types.task_list_types import (
     TaskListCreateInput,
@@ -101,13 +101,23 @@ class TaskListQuery:
 class TaskListMutation:
     @strawberry.mutation
     async def create_task_list(self, input: TaskListCreateInput, info: Info[GraphQLContext, None]) -> TaskListType:
-        session = info.context.db_session
-        service = ServiceFactory.create_task_list_service(session)
+        try:
+            print(f"GraphQL create_task_list called with: title={input.title}, user_id={input.user_id}")
+            session = info.context.db_session
+            service = ServiceFactory.create_task_list_service(session)
 
-        task_list = TaskList(title=input.title, description=input.description, user_id=input.user_id)
+            task_list = TaskList(title=input.title, description=input.description, user_id=input.user_id)
+            print(f"Created task_list entity: {task_list}")
 
-        result = await service.create(task_list)
-        return task_list_to_graphql(result)
+            result = await service.create(task_list)
+            print(f"Service create returned: {result}")
+            return task_list_to_graphql(result)
+        except InvalidUserException as e:
+            print(f"InvalidUserException caught: {e}")
+            raise Exception(f"Invalid user: {str(e)}")
+        except Exception as e:
+            print(f"Unexpected exception in create_task_list: {type(e).__name__}: {e}")
+            raise
 
     @strawberry.mutation
     async def update_task_list(self, id: int, input: TaskListUpdateInput, info: Info[GraphQLContext, None]) -> Optional[TaskListType]:
@@ -131,6 +141,8 @@ class TaskListMutation:
             return task_list_to_graphql(result)
         except ValueError:
             return None
+        except InvalidUserException as e:
+            raise Exception(f"Invalid user: {str(e)}")
 
     @strawberry.mutation
     async def delete_task_list(self, id: int, info: Info[GraphQLContext, None]) -> bool:

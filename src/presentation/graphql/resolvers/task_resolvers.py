@@ -59,6 +59,11 @@ class TaskMutation:
             session = info.context.db_session
             service = ServiceFactory.create_task_service(session)
 
+            # Normalize due_date to remove timezone info if present
+            due_date = input.due_date
+            if due_date and due_date.tzinfo is not None:
+                due_date = due_date.replace(tzinfo=None)
+
             task = Task(
                 title=input.title,
                 description=input.description,
@@ -66,7 +71,7 @@ class TaskMutation:
                 status=TaskStatus(input.status.value),
                 priority=TaskPriority(input.priority.value),
                 assigned_user_id=input.assigned_user_id,
-                due_date=input.due_date,
+                due_date=due_date,
             )
 
             result = await service.create(task)
@@ -83,6 +88,11 @@ class TaskMutation:
         session = info.context.db_session
         service = ServiceFactory.create_task_service(session)
 
+        # Normalize due_date to remove timezone info if present
+        due_date = input.due_date
+        if due_date and due_date.tzinfo is not None:
+            due_date = due_date.replace(tzinfo=None)
+
         task = Task(
             title=input.title,
             description=input.description,
@@ -90,7 +100,7 @@ class TaskMutation:
             status=TaskStatus(input.status.value) if input.status else None,
             priority=TaskPriority(input.priority.value) if input.priority else None,
             assigned_user_id=input.assigned_user_id,
-            due_date=input.due_date,
+            due_date=due_date,
         )
 
         try:

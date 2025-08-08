@@ -32,6 +32,11 @@ async def create_task(
     current_user: Annotated[User, Depends(get_current_user)],
     service: TaskService = Depends(get_task_service),
 ):
+    # Normalize due_date to remove timezone info if present
+    due_date = task_data.due_date
+    if due_date and due_date.tzinfo is not None:
+        due_date = due_date.replace(tzinfo=None)
+    
     task = Task(
         title=task_data.title,
         description=task_data.description,
@@ -39,7 +44,7 @@ async def create_task(
         status=task_data.status,
         priority=task_data.priority,
         assigned_user_id=task_data.assigned_user_id,
-        due_date=task_data.due_date,
+        due_date=due_date,
     )
     try:
         result = await service.create(task)
@@ -76,6 +81,11 @@ async def update_task(
     current_user: Annotated[User, Depends(get_current_user)],
     service: TaskService = Depends(get_task_service),
 ):
+    # Normalize due_date to remove timezone info if present
+    due_date = task_data.due_date
+    if due_date and due_date.tzinfo is not None:
+        due_date = due_date.replace(tzinfo=None)
+    
     task = Task(
         title=task_data.title,
         description=task_data.description,
@@ -83,7 +93,7 @@ async def update_task(
         status=task_data.status,
         priority=task_data.priority,
         assigned_user_id=task_data.assigned_user_id,
-        due_date=task_data.due_date,
+        due_date=due_date,
     )
     try:
         result = await service.update(task_id, task)

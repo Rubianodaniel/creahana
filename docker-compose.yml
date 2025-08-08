@@ -14,6 +14,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - crehana_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crehana_user -d crehana_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   postgres_test:
     image: postgres:15-alpine
@@ -24,7 +29,25 @@ services:
       POSTGRES_PASSWORD: crehana_pass
     ports:
       - "5433:5432"
+    networks:
+      - crehana_network
 
+  app:
+    build: .
+    container_name: crehana_app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://crehana_user:crehana_pass@postgres:5432/crehana_db
+      - TEST_DATABASE_URL=postgresql+asyncpg://crehana_user:crehana_pass@postgres_test:5432/crehana_test_db
+      - SECRET_KEY=your-secret-key-here
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      - EMAIL_FROM=noreply@crehana.com
+      - EMAIL_ENABLED=true
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - crehana_network
 

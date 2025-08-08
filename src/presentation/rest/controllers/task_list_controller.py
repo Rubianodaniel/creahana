@@ -8,6 +8,7 @@ from src.application.use_cases.task_list.task_list_service import TaskListServic
 from src.domain.entities.task import TaskPriority, TaskStatus
 from src.domain.entities.task_list import TaskList
 from src.domain.entities.user import User
+from src.domain.exceptions.task_list_exceptions import InvalidUserException
 from src.infrastructure.database.connection import get_db_session
 from src.presentation.rest.middleware.auth_middleware import get_current_user
 from src.presentation.rest.dtos.task_list_schemas import (
@@ -45,8 +46,11 @@ async def create_task_list(
         description=task_list_data.description,
         user_id=task_list_data.user_id,
     )
-    result = await service.create(task_list)
-    return TaskListResponseSchema.model_validate(result)
+    try:
+        result = await service.create(task_list)
+        return TaskListResponseSchema.model_validate(result)
+    except InvalidUserException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/{task_list_id}", response_model=TaskListResponseSchema)
@@ -87,6 +91,8 @@ async def update_task_list(
         return TaskListResponseSchema.model_validate(result)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except InvalidUserException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.delete("/{task_list_id}", status_code=status.HTTP_204_NO_CONTENT)

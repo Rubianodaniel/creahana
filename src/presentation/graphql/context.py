@@ -17,14 +17,8 @@ class GraphQLContext(BaseContext):
         self.current_user = current_user
 
 
-async def get_db_session_dependency():
-    """Dependency that properly handles async session lifecycle."""
-    async for session in get_db_session():
-        yield session
-
-
 async def get_graphql_context(
-    db_session: AsyncSession = Depends(get_db_session_dependency),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: User = Depends(get_current_user),
 ) -> GraphQLContext:
     """Context getter for GraphQL that injects database session and user using FastAPI dependency."""
