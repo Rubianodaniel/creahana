@@ -92,4 +92,79 @@ async def test_create_task_short_title(test_client):
 
     response = await test_client.post("/api/tasks/", json=task_data)
 
-    assert response.status_code == 422  # Validation error
+    assert response.status_code == 422 
+
+
+@pytest.mark.asyncio
+async def test_create_task_with_assigned_user(test_client):
+    """Test creating a task with assigned user."""
+    # Create a user first
+    user_data = {"username": "testuser", "email": "test@example.com", "full_name": "Test User"}
+    user_response = await test_client.post("/api/users/", json=user_data)
+    assert user_response.status_code == 201
+    user_id = user_response.json()["id"]
+
+    # Create a task list
+    task_list_data = {"title": "Parent Task List", "description": "List for tasks"}
+    list_response = await test_client.post("/api/task-lists/", json=task_list_data)
+    assert list_response.status_code == 201
+    task_list_id = list_response.json()["id"]
+
+    # Create task with assigned user
+    task_data = {
+        "title": "Task with assigned user",
+        "description": "This task is assigned to a user",
+        "task_list_id": task_list_id,
+        "assigned_user_id": user_id,
+        "priority": "high"
+    }
+
+    response = await test_client.post("/api/tasks/", json=task_data)
+
+    assert response.status_code == 201
+    data = response.json()
+
+    assert data["title"] == "Task with assigned user"
+    assert data["description"] == "This task is assigned to a user"
+    assert data["assigned_user_id"] == user_id
+    assert data["priority"] == "high"
+    assert data["task_list_id"] == task_list_id
+
+
+@pytest.mark.asyncio
+async def test_create_task_with_invalid_assigned_user(e2e_client):
+    """Test creating a task with non-existent assigned user - End to End test."""
+    # Create a valid user and task list first (using real commits)
+    user_data = {"username": "validuser", "email": "valid@example.com", "full_name": "Valid User"}  
+    user_response = await e2e_client.post("/api/users/", json=user_data)
+    assert user_response.status_code == 201
+    valid_user_id = user_response.json()["id"]
+
+    task_list_data = {"title": "Parent Task List", "description": "List for tasks"}
+    list_response = await e2e_client.post("/api/task-lists/", json=task_list_data)
+    assert list_response.status_code == 201
+    task_list_id = list_response.json()["id"]
+
+    # First confirm we can create task with valid user and list
+    valid_task_data = {
+        "title": "Valid task",
+        "task_list_id": task_list_id,
+        "assigned_user_id": valid_user_id
+    }
+    valid_response = await e2e_client.post("/api/tasks/", json=valid_task_data)
+    assert valid_response.status_code == 201
+
+
+    task_data = {
+        "title": "Task with invalid user",
+        "task_list_id": task_list_id,
+        "assigned_user_id": 99999  
+    }
+
+    response = await e2e_client.post("/api/tasks/", json=task_data)
+    
+
+    assert response.status_code == 400
+    response_detail = response.json()["detail"]
+    assert ("User 99999 does not exist" in response_detail or 
+            "Task list" in response_detail and "does not exist" in response_detail)

@@ -56,19 +56,25 @@ async def test_engine():
 async def db_session(test_engine):
     """
     Proporciona una sesión de base de datos aislada por transacción para cada test.
+    Usa transacciones anidadas para permitir múltiples operaciones por test.
     """
-    # (Este fixture está bien, no se necesita cambiar)
     connection = await test_engine.connect()
     trans = await connection.begin()
 
-    TestingSessionLocal = sessionmaker(bind=connection, class_=AsyncSession, expire_on_commit=False)
+    TestingSessionLocal = sessionmaker(
+        bind=connection, 
+        class_=AsyncSession, 
+        expire_on_commit=False,
+        autoflush=False,
+        autocommit=False
+    )
     session = TestingSessionLocal()
 
     try:
         yield session
     finally:
         await session.close()
-        await trans.rollback()
+        await trans.rollback() 
         await connection.close()
 
 
@@ -88,3 +94,48 @@ async def test_client(db_session: AsyncSession):
     # Se usa httpx.AsyncClient en lugar de TestClient
     async with httpx.AsyncClient(app=app, base_url="http://test") as client:
         yield client
+
+
+@pytest.fixture
+async def e2e_client(test_engine):
+
+    SessionLocal = sessionmaker(bind=test_engine, class_=AsyncSession, expire_on_commit=False)
+
+    async def get_e2e_session():
+        """Dependency override que crea sesiones reales por request."""
+        async with SessionLocal() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+
+
+    app.dependency_overrides[get_db_session] = get_e2e_session
+
+    async with httpx.AsyncClient(app=app, base_url="http://test") as client:
+        yield client
+        
+        async with SessionLocal() as cleanup_session:
+            from sqlalchemy import text
+            result = await cleanup_session.execute(text("""
+                SELECT tablename 
+                FROM pg_tables 
+                WHERE schemaname = 'public' 
+                AND tablename != 'alembic_version'
+            """))
+            tables = [row[0] for row in result.fetchall()]
+            
+            if tables:
+                # Disable foreign key constraints
+                await cleanup_session.execute(text("SET session_replication_role = 'replica'"))
+
+                # Truncate all tables
+                tables_str = ', '.join(tables)
+                await cleanup_session.execute(text(f"TRUNCATE TABLE {tables_str} RESTART IDENTITY"))
+
+                # Re-enable foreign key constraints
+                await cleanup_session.execute(text("SET session_replication_role = 'origin'"))
+                
+                await cleanup_session.commit()

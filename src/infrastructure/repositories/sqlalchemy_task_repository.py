@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.entities.task import Task, TaskPriority, TaskStatus
-from src.domain.exceptions.task_exceptions import InvalidTaskListException
+from src.domain.exceptions.task_exceptions import InvalidTaskListException, InvalidUserException
 from src.domain.outputs.task_repository import TaskRepository
 from src.infrastructure.database.mappers import TaskMapper
 from src.infrastructure.database.models.task_model import TaskModel
@@ -23,11 +23,21 @@ class SQLAlchemyTaskRepository(TaskRepository):
             await self.session.refresh(model)
             return TaskMapper.to_domain(model)
         except IntegrityError as e:
-            await self.session.rollback()
-            # Check if it's a foreign key constraint error for task_list_id
-            if "foreign key constraint" in str(e).lower() or "violates foreign key" in str(e).lower():
-                if "task_list_id" in str(e) or "task_lists" in str(e):
-                    raise InvalidTaskListException(task.task_list_id)
+            # No hacer rollback aquí - solo lanzar la excepción apropiada
+            error_message = str(e).lower()
+            
+            # Check if it's a foreign key constraint error
+            if "foreign key constraint" not in error_message and "violates foreign key" not in error_message:
+                raise e
+            
+            # Handle specific foreign key violations
+            if "task_list_id" in error_message or "task_lists" in error_message:
+                raise InvalidTaskListException(task.task_list_id)
+            
+            if "assigned_user_id" in error_message or "users" in error_message:
+                if task.assigned_user_id:
+                    raise InvalidUserException(task.assigned_user_id)
+            
             # Re-raise other integrity errors
             raise e
 
@@ -43,18 +53,37 @@ class SQLAlchemyTaskRepository(TaskRepository):
         if not model:
             raise ValueError(f"Task with id {task.id} not found")
 
-        model.title = task.title
-        model.description = task.description
-        model.task_list_id = task.task_list_id
-        model.status = task.status
-        model.priority = task.priority
-        model.assigned_user_id = task.assigned_user_id
-        model.due_date = task.due_date
-        model.is_active = task.is_active
+        try:
+            model.title = task.title
+            model.description = task.description
+            model.task_list_id = task.task_list_id
+            model.status = task.status
+            model.priority = task.priority
+            model.assigned_user_id = task.assigned_user_id
+            model.due_date = task.due_date
+            model.is_active = task.is_active
 
-        await self.session.flush()
-        await self.session.refresh(model)
-        return TaskMapper.to_domain(model)
+            await self.session.flush()
+            await self.session.refresh(model)
+            return TaskMapper.to_domain(model)
+        except IntegrityError as e:
+            # No hacer rollback aquí - solo lanzar la excepción apropiada
+            error_message = str(e).lower()
+            
+            # Check if it's a foreign key constraint error
+            if "foreign key constraint" not in error_message and "violates foreign key" not in error_message:
+                raise e
+            
+            # Handle specific foreign key violations
+            if "task_list_id" in error_message or "task_lists" in error_message:
+                raise InvalidTaskListException(task.task_list_id)
+            
+            if "assigned_user_id" in error_message or "users" in error_message:
+                if task.assigned_user_id:
+                    raise InvalidUserException(task.assigned_user_id)
+            
+            # Re-raise other integrity errors
+            raise e
 
     async def delete(self, task_id: int) -> bool:
         result = await self.session.execute(select(TaskModel).where(TaskModel.id == task_id))

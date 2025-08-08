@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.use_cases.task.task_service import TaskService
 from src.domain.entities.task import Task
+from src.domain.exceptions.task_exceptions import InvalidTaskListException, InvalidUserException
 from src.infrastructure.database.connection import get_db_session
 from src.presentation.rest.dtos.task_schemas import (
     TaskCreateSchema,
@@ -37,8 +38,13 @@ async def create_task(
         assigned_user_id=task_data.assigned_user_id,
         due_date=task_data.due_date,
     )
-    result = await service.create(task)
-    return TaskResponseSchema.model_validate(result)
+    try:
+        result = await service.create(task)
+        return TaskResponseSchema.model_validate(result)
+    except InvalidTaskListException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except InvalidUserException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/{task_id}", response_model=TaskResponseSchema)
@@ -80,6 +86,10 @@ async def update_task(
         return TaskResponseSchema.model_validate(result)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except InvalidTaskListException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except InvalidUserException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)

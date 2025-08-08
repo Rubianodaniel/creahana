@@ -18,3 +18,11 @@ class TaskNotFoundException(TaskException):
     def __init__(self, task_id: int):
         self.task_id = task_id
         super().__init__(f"Task {task_id} not found")
+
+
+class InvalidUserException(TaskException):
+    """Exception raised when trying to assign a task to non-existent user"""
+
+    def __init__(self, user_id: int):
+        self.user_id = user_id
+        super().__init__(f"User {user_id} does not exist")
