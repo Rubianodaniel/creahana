@@ -2,13 +2,12 @@ import asyncio
 
 import httpx
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from alembic import command
 from alembic.config import Config
-from main import app  # Asegúrate de que esta importación sea correcta
+from main import app
 from src.infrastructure.config.settings import settings
 from src.infrastructure.database.connection import Base, get_db_session
 
@@ -88,10 +87,10 @@ async def test_client(db_session: AsyncSession):
         """Sobrescribe la dependencia para inyectar la sesión de prueba."""
         yield db_session
 
-    # Se aplica la sobrescritura de la dependencia
+
     app.dependency_overrides[get_db_session] = override_get_db_session
 
-    # Se usa httpx.AsyncClient en lugar de TestClient
+
     async with httpx.AsyncClient(app=app, base_url="http://test") as client:
         yield client
 

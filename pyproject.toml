@@ -27,6 +27,25 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-addopts = "--cov=src --cov-report=term-missing --cov-report=html"
+addopts = [
+    "-v",
+    "--tb=short",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-fail-under=75",
+    "--strict-markers",
+    "--disable-warnings"
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore::pytest.PytestUnraisableExceptionWarning"
+]
+markers = [
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "slow: marks tests as slow tests"
+]
 asyncio_mode = "auto"
 pythonpath = ["."]
