@@ -91,7 +91,7 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 - **GraphQL**: http://localhost:8000/graphql (GraphiQL interface)
 
 
-## 🔍 Usage Examples
+## Usage Examples
 
 ### Complete REST API Workflow
 Here's a step-by-step example showing the complete authentication and task management flow:
@@ -250,7 +250,7 @@ mutation {
 ```
 
 
-## 🧪 Testing
+## Testing
 
 ### Run all tests
 ```bash
@@ -275,7 +275,7 @@ open htmlcov/index.html
 
 **Current coverage**:
 
-## 🔧 Development
+## Development
 
 ### Linting and formatting
 ```bash
@@ -313,11 +313,11 @@ alembic history
 
 ## Security
 
-- ✅ JWT Authentication
-- ✅ Password hashing with bcrypt
-- ✅ Input validation with Pydantic
-- ✅ CORS protection configured
-- ✅ Environment variables for secrets
+- JWT Authentication
+- Password hashing with bcrypt
+- Input validation with Pydantic
+- CORS protection configured
+- Environment variables for secrets
 
 ## Project Structure
 
@@ -338,7 +338,7 @@ alembic history
 └── requirements.txt      # Python dependencies
 ```
 
-## 🐳 Docker
+## Docker
 
 ### Manual build
 ```bash
